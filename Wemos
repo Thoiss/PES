@@ -91,7 +91,8 @@ void loop() {
           if (data == "Knop") {
             if (Print_Knop == 1){
             Serial.print("Op data is knop uitgelezen");
-              clients[i].print("TRUE");
+              clients[i].print("TRUE"); //5,D1  (Destination socket, Destination Pin)
+              Print_Knop = 0;
             }
             else{
               clients[i].print("FALSE");
@@ -101,13 +102,13 @@ void loop() {
       }
 
       // **Check timeout van 10 seconden**
-      if (millis() - lastActiveTime[i] > Time_Delay) {
-        Serial.print("Client ");
-        Serial.print(i);
-        Serial.println(" is losgekoppeld wegens inactiviteit.");
-        clients[i].stop();          // Sluit client af
-        clients[i] = WiFiClient();  // Maak de slot weer vrij
-      }
+      // if (millis() - lastActiveTime[i] > Time_Delay) {
+      //   Serial.print("Client ");
+      //   Serial.print(i);
+      //   Serial.println(" is losgekoppeld wegens inactiviteit.");
+      //   clients[i].stop();          // Sluit client af
+      //   clients[i] = WiFiClient();  // Maak de slot weer vrij
+      // }
     }
   }
 
@@ -119,10 +120,10 @@ void loop() {
         Serial.println("Knop is ingedrukt.");
       }
       Print_Knop = 1;
-      digitalWrite(LED_PIN, HIGH);  // LED aan
+      // digitalWrite(LED_PIN, HIGH);  // LED aan
     }
-  } else {  // Knop niet ingedrukt
-    Print_Knop = 0;
-    digitalWrite(LED_PIN, LOW);  // LED uit
+  // } else {  // Knop niet ingedrukt
+  //   Print_Knop = 0;
+    // digitalWrite(LED_PIN, LOW);  // LED uit
   }
 }
