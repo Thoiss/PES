@@ -47,46 +47,68 @@ int connect_to_wemos(const char *ip) {
         return -1;
     }
 
-    printf("Verbonden met Wemos op %s\n", ip);
+    printf("Verbonden met %d Wemos op %s\n", sock,ip);
     return sock;
 }
 
 int vraag_knop_status(int Socket) {
-    client_fd = connect_to_wemos(wemos_ips[Socket]);
-    send(client_fd, hello, strlen(hello), 0);
-    printf("Hello message sent\n");
-    read(client_fd, buffer, sizeof(buffer) - 1);
-    printf("%s\n", buffer);
     memset(buffer, 0, sizeof(buffer));
-    sleep(1);
-    send(client_fd, Knop, strlen(Knop), 0);
+
+    send(client_fd, hello, strlen(hello), 0);
+    printf("%d: Hello message sent\n",Socket);
+    usleep(500000);
     read(client_fd, buffer, sizeof(buffer) - 1);
     printf("%s\n", buffer);
     memset(buffer, 0, sizeof(buffer));
 
+    if(Versturen){
+        if(Waarde_Knop == 1){
+            send(client_fd, Led, strlen(Led), 0);
+            printf("Led message sent\n");
+            usleep(500000);
+            read(client_fd, buffer, sizeof(buffer) - 1);
+            printf("%s\n", buffer);
+            memset(buffer, 0, sizeof(buffer));
+            Waarde_Knop=0;    
+        }
+    }
+
+    memset(buffer, 0, sizeof(buffer));
+    send(client_fd, Knop, strlen(Knop), 0);
     read(client_fd, buffer, sizeof(buffer) - 1);
     printf("%s\n", buffer);
-    if (strcmp(buffer, "TRUE") == 0) {
-        printf("Connectie naar andere\n");
-        Waarde_Knop = 1;
-    }
-    sleep(1);
+    usleep(500000);
     memset(buffer, 0, sizeof(buffer));
-    while (strcmp(buffer, "Verbinding wordt afgesloten door server") != 0)
-    {
-        send(client_fd, sluiten, strlen(sluiten), 0);
-        read(client_fd, buffer, sizeof(buffer) - 1);
-        printf("End message sent\n");
-        sleep(2);
+//Toevoegen-aanpassen 5,D1  (Destination socket, Destination Pin)
+    read(client_fd, buffer, sizeof(buffer) - 1);
+    printf("%s\n", buffer);
+    usleep(500000);
+    if (strcmp(buffer, "TRUE") == 0) {
+        Waarde_Knop = 1;
+        Versturen = true;
     }
+    memset(buffer, 0, sizeof(buffer));
+    // while (strcmp(buffer, "Verbinding wordt afgesloten door server") != 0)
+    // {
+    //     send(client_fd, sluiten, strlen(sluiten), 0);
+    //     read(client_fd, buffer, sizeof(buffer) - 1);
+    //     printf("End message sent\n");
+    //     sleep(2);
+    // }
 }
 int main() {
     while (1) {
-        for(Socket =0;Socket < Devices; Socket++ ){
+        if(Socket < Devices){
         printf("%d\n", Socket);
-        vraag_knop_status(Socket);
+        client_fd = connect_to_wemos(wemos_ips[Socket]);
         // zet_led_aan();
-        sleep(3);  // Wacht even voordat de volgende check start
+        sleep(2);  // Wacht even voordat de volgende check start
+        Socket++;
+    }
+    for(int i = 0; i < Devices; i++){
+    // sleep(1);
+    client_fd = i+3;
+    vraag_knop_status(i);
     }
 }
     return 0;
