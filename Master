@@ -1,0 +1,36 @@
+#include <Wire.h>
+
+#define LED_PIN PA11
+#define SDA PB7
+#define SCL PB6
+
+
+void setup() {
+  Wire.setSDA(SDA);
+    Wire.setSCL(SCL);
+  // Start I2C als master
+  Wire.begin(); 
+  // Start seriële communicatie voor debugging
+  Serial.begin(115200);
+  Serial.println("Master vraagt om knopstatus");
+
+  Wire.setClock(100000); // Zet de I2C-snelheid op 100 kHz
+  pinMode(LED_PIN, OUTPUT);  // Zet de LED pin als output
+}
+
+void loop() {
+  Wire.requestFrom(8, 1); // Vraag 1 byte van de slave (adres 8)
+
+  if (Wire.available()) {
+    int buttonState = Wire.read(); // Lees het ontvangen byte
+    if (buttonState == 1) {
+      digitalWrite(LED_PIN, HIGH);  // Zet LED aan
+      Serial.println("Led aan");
+    } else {
+      digitalWrite(LED_PIN, LOW);  // Zet LED uit
+      Serial.println("Led uit");
+    }
+  }
+
+  delay(1000); // Wacht 1 seconde voor de volgende vraag
+}
