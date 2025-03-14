@@ -1,0 +1,44 @@
+#include <Wire.h>
+
+#define BUTTON_PIN PA0  // Kies een pin voor de knop (bijvoorbeeld PA0)
+#define SDA PB7
+#define SCL PB6
+int Slave1_Knop_Waarde = 0;
+
+void setup() {
+  // Start de seriële communicatie voor debugging
+  Wire.setSDA(SDA);
+  Wire.setSCL(SCL);
+  Serial.begin(115200);
+  Serial.println("STM32 Slave met knop");
+
+  // Start de I2C slave met adres 8
+  Wire.begin(8);
+
+  // Configureer de knoppin als input met interne pull-up
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+  // Zet een functie voor ontvangen data via I2C
+  Wire.onRequest(requestData);
+}
+
+void loop() {
+  // Lees de status van de knop (de pin is LOW als de knop is ingedrukt)
+  bool buttonState = digitalRead(BUTTON_PIN);
+
+  // Als de knop ingedrukt is, zet de waarde naar 1
+  if (buttonState == LOW) {
+    delay(300);  // Debouncing voor de knop
+    if (digitalRead(BUTTON_PIN) == LOW) {
+      Slave1_Knop_Waarde = 1;
+      Serial.println("Knop ingedrukt");
+    }
+  } else {
+    Slave1_Knop_Waarde = 0;
+  }
+}
+
+void requestData() {
+  // Stuur de knopstatus terug naar de master
+  Wire.write(Slave1_Knop_Waarde);  // 1 als ingedrukt, 0 als niet ingedrukt
+}
