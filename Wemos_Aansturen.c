@@ -1,3 +1,4 @@
+// Pi-B
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>  // Voor inet_pton()
@@ -27,6 +28,7 @@ int Waarde_Knop = 0;
 int Socket = 0;
 bool Versturen = false;
 
+// Create Socket Pro + Connect
 int connect_to_wemos(const char *ip) {
     int sock;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -51,6 +53,7 @@ int connect_to_wemos(const char *ip) {
     return sock;
 }
 
+// Lees waarde van knop uit
 int vraag_knop_status(int Socket) {
     memset(buffer, 0, sizeof(buffer));
 
