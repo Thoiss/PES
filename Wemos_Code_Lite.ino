@@ -6,18 +6,18 @@ const char* ssid = "pinetwerk";
 const char* password = "bok12345";
 WiFiServer server(8888);
 
-#define MAX_CLIENTS 5                               // Aantal toegestane clients
-#define Time_Delay 10000                            // 10 seconden timeout
-#define SDA_PIN D2  // Standaard voor Wemos D1 mini (GPIO4)
-#define SCL_PIN D1  // Standaard voor Wemos D1 mini (GPIO5)
-#define LED_PIN D5                                  // LED op D5 (GPIO14)
-#define RED_PIN D6   // Rood op D6
-#define GREEN_PIN D7 // Groen op D7
-#define BLUE_PIN D8  // Blauw op D8
+#define MAX_CLIENTS 5     // Aantal toegestane clients
+#define Time_Delay 10000  // 10 seconden timeout
+#define SDA_PIN D2        // Standaard voor Wemos D1 mini (GPIO4)
+#define SCL_PIN D1        // Standaard voor Wemos D1 mini (GPIO5)
+#define LED_PIN D5        // LED op D5 (GPIO14)
+#define RED_PIN D6        // Rood op D6
+#define GREEN_PIN D7      // Groen op D7
+#define BLUE_PIN D8       // Blauw op D8
 void setRGBColor(int red, int green, int blue) {
-  analogWrite(RED_PIN, red);   // Rood kanaal
-  analogWrite(GREEN_PIN, green); // Groen kanaal
-  analogWrite(BLUE_PIN, blue);  // Blauw kanaal
+  analogWrite(RED_PIN, red);      // Rood kanaal
+  analogWrite(GREEN_PIN, green);  // Groen kanaal
+  analogWrite(BLUE_PIN, blue);    // Blauw kanaal
 }
 
 
@@ -35,7 +35,8 @@ void setup() {
   // Initialiseer de SHT3X sensor
   if (!sht31.begin()) {
     Serial.println("Sensor niet gevonden!");
-    while (1);  // Stop de uitvoering als de sensor niet gevonden wordt
+    while (1)
+      ;  // Stop de uitvoering als de sensor niet gevonden wordt
   }
 
   Serial.println("Sensor gevonden!");
@@ -52,7 +53,7 @@ void setup() {
 
   server.begin();  // Start de server
 
-  pinMode(LED_PIN, OUTPUT);           // LED als output
+  pinMode(LED_PIN, OUTPUT);  // LED als output
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
@@ -61,8 +62,8 @@ void setup() {
 void loop() {
   // Check voor nieuwe clients
   WiFiClient newClient = server.available();
-          Serial.print("RGB");
-          setRGBColor(150, 50, 50);
+  // Serial.print("RGB");
+  // setRGBColor(0, 250, 0);
   if (newClient) {
     Serial.println("Nieuwe client probeert te verbinden...");
     bool added = false;
@@ -87,9 +88,9 @@ void loop() {
   float temperature = sht31.readTemperature();
   if (!isnan(temperature)) {
     // Print de temperatuur in de Serial Monitor
-    Serial.print("Huidige temperatuur: ");
-    Serial.print(temperature);
-    Serial.println(" C");
+    // Serial.print("Huidige temperatuur: ");
+    // Serial.print(temperature);
+    // Serial.println(" C");
   } else {
     Serial.println("Fout bij het uitlezen van de temperatuur.");
   }
@@ -127,23 +128,56 @@ void loop() {
             clients[i].stop();          // Sluit client af
             clients[i] = WiFiClient();  // Maak de slot weer vrij
           }
+          if(data == "RGB"){
+            clients[i].print("RGBFALSE");
+          }
+
           if (data == "Knop") {
-            if (Print_Knop == 1){
-            Serial.print("Op data is knop uitgelezen");
-              clients[i].print("TRUE"); //5,D1  (Destination socket, Destination Pin)
+            if (Print_Knop == 1) {
+              Serial.print("Op data is knop uitgelezen");
+              clients[i].print("TRUE");  //5,D1  (Destination socket, Destination Pin)
               Print_Knop = 0;
-            }
-            else{
+            } else {
               clients[i].print("FALSE");
             }
           }
-          if (data == "PiTest") {
-            if (PiPrint_Knop == 1){
-            Serial.print("Op data is knop uitgelezen");
-              clients[i].print("PiTRUE"); 
-              PiPrint_Knop = 0;
+          if (data.indexOf("RGBWAARDE") != -1) {  // Check of "RGBWAARDE" aanwezig is
+            int dashIndex = data.indexOf(" - ");  // Zoek de positie van " - "
+
+            if (dashIndex != -1) {                              // Controleer of " - " bestaat in de string
+              String numString = data.substring(0, dashIndex);  // Pak het deel vóór " - "
+              int preset = numString.toInt();                   // Zet om naar een integer
+
+              Serial.print("Ontvangen preset: ");
+              Serial.println(preset);
+
+              // **Pas RGB-kleur aan op basis van preset**
+              switch (preset) {
+                case 0:
+                  setRGBColor(0, 0, 0);  // LED uit
+                  break;
+                case 1:
+                  setRGBColor(255, 0, 0);  // Rood
+                  break;
+                case 2:
+                  setRGBColor(0, 255, 0);  // Groen
+                  break;
+                case 3:
+                  setRGBColor(0, 0, 255);  // Blauw
+                  break;
+                default:
+                  Serial.println("Ongeldige preset ontvangen!");
+                  break;
+              }
             }
-            else{
+          }
+
+          if (data == "PiTest") {
+            if (PiPrint_Knop == 1) {
+              Serial.print("Op data is knop uitgelezen");
+              clients[i].print("PiTRUE");
+              PiPrint_Knop = 0;
+            } else {
               clients[i].print("PiFALSE");
             }
           }
