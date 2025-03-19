@@ -7,11 +7,16 @@ WiFiServer server(8888);
 #define Time_Delay 10000                            // 10 seconden timeout
 #define BUTTON_PIN D1                               // Knop op D1 (GPIO5)
 #define PI_PIN D2                                   // Knop op D2 (GPIO4)
-#define LED_PIN D5                                  // LED op D5 (GPIO14)
+#define RGB_Button D5                               // RGB_Button op D5 (GPIO14)
 WiFiClient clients[MAX_CLIENTS];                    // Array om clients op te slaan
 unsigned long lastActiveTime[MAX_CLIENTS] = { 0 };  // Houd de laatste activiteit per client bij
+
 int Print_Knop = 0;
 int PiPrint_Knop = 0;
+int RGB_Preset_Knop = 0;
+int RGBWaarde = 0;
+
+
 void setup() {
   Serial.begin(115200);
   Serial.println("\nOpstarten...");
@@ -30,7 +35,6 @@ void setup() {
 
   pinMode(PI_PIN, INPUT_PULLUP);      // Knop Pi communicatie
   pinMode(BUTTON_PIN, INPUT_PULLUP);  // Knop als input met interne pull-up
-  pinMode(LED_PIN, OUTPUT);           // LED als output
 }
 
 void loop() {
@@ -77,12 +81,6 @@ void loop() {
           // clients[i].print("Echo: " + data);  // Stuur bericht terug
 
 
-          lastActiveTime[i] = millis();  // Reset de timeout timer
-          if (data == "Led") {
-            digitalWrite(LED_PIN, HIGH);
-            delay(1500);
-            digitalWrite(LED_PIN, LOW);
-          }
           if (data == "End") {
             clients[i].print("Verbinding wordt afgesloten door server");
             Serial.print("Client ");
@@ -99,6 +97,16 @@ void loop() {
             }
             else{
               clients[i].print("FALSE");
+            }
+          }
+          if (data == "RGB") {
+            if (RGB_Preset_Knop == 1){
+            Serial.print("RGB Waarde verstuurd \n");
+              clients[i].print(RGBWaarde);
+              RGB_Preset_Knop = 0;
+            }
+            else{
+              clients[i].print("RGBFALSE");
             }
           }
           if (data == "PiTest") {
@@ -127,6 +135,8 @@ void loop() {
 
   int buttonState = digitalRead(BUTTON_PIN);  // Lees de knopstatus voor de test tussen Wemos
   int PibuttonState = digitalRead(PI_PIN);  // Lees de knopstatus voor de Pi
+  int RGB_Preset_buttonState = digitalRead(RGB_Button);
+
   if (buttonState == LOW) {  // Knop ingedrukt
     delay(300);
     if (buttonState == LOW) {
@@ -134,6 +144,20 @@ void loop() {
         Serial.println("Knop is ingedrukt.");
       }
       Print_Knop = 1;
+    }
+
+  }
+  if (RGB_Preset_buttonState == LOW) {  // Knop ingedrukt
+    delay(300);
+    if (RGB_Preset_buttonState == LOW) {
+      if (RGB_Preset_Knop == 0) {
+        Serial.println("RGB Knop is ingedrukt.");
+        RGBWaarde ++;
+        if(RGBWaarde >= 4){
+          RGBWaarde =0;
+        }
+      }
+      RGB_Preset_Knop = 1;
     }
 
   }
