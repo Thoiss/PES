@@ -35,6 +35,7 @@ void setup() {
 
   pinMode(PI_PIN, INPUT_PULLUP);      // Knop Pi communicatie
   pinMode(BUTTON_PIN, INPUT_PULLUP);  // Knop als input met interne pull-up
+  pinMode(RGB_Button, INPUT_PULLUP);
 }
 
 void loop() {
@@ -154,7 +155,7 @@ void loop() {
         Serial.println("RGB Knop is ingedrukt.");
         RGBWaarde ++;
         if(RGBWaarde >= 4){
-          RGBWaarde =0;
+          RGBWaarde = 1;
         }
       }
       RGB_Preset_Knop = 1;
