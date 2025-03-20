@@ -155,19 +155,19 @@ void loop() {
               switch (preset) {
                 case 0:
                   setRGBColor(0, 0, 0);  // LED uit
-                  break;
+                  continue;
                 case 1:
-                  setRGBColor(255, 0, 0);  // Rood
-                  break;
+                  setRGBColor(255, 50, 50);  // Rood
+                  continue;
                 case 2:
-                  setRGBColor(0, 255, 0);  // Groen
-                  break;
+                  setRGBColor(50, 255, 50);  // Groen
+                  continue;
                 case 3:
-                  setRGBColor(0, 0, 255);  // Blauw
-                  break;
+                  setRGBColor(50, 50, 255);  // Blauw
+                  continue;
                 default:
                   Serial.println("Ongeldige preset ontvangen!");
-                  break;
+                  continue;
               }
             }
           }
