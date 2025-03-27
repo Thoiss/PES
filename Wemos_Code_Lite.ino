@@ -1,11 +1,12 @@
 #include <ESP8266WiFi.h>
 #include <Wire.h>
 #include <Adafruit_SHT31.h>
+#include <Ticker.h>
 
 const char* ssid = "pinetwerk";
 const char* password = "bok12345";
 WiFiServer server(8888);
-
+Ticker ledTimer;
 #define MAX_CLIENTS 5     // Aantal toegestane clients
 #define Time_Delay 10000  // 10 seconden timeout
 #define SDA_PIN D2        // Standaard voor Wemos D1 mini (GPIO4)
@@ -20,6 +21,9 @@ void setRGBColor(int red, int green, int blue) {
   analogWrite(BLUE_PIN, blue);    // Blauw kanaal
 }
 
+void ledUitZetten(){
+  digitalWrite(LED_PIN, LOW);
+}
 
 WiFiClient clients[MAX_CLIENTS];                    // Array om clients op te slaan
 unsigned long lastActiveTime[MAX_CLIENTS] = { 0 };  // Houd de laatste activiteit per client bij
@@ -117,8 +121,9 @@ void loop() {
           lastActiveTime[i] = millis();  // Reset de timeout timer
           if (data == "Led") {
             digitalWrite(LED_PIN, HIGH);
-            delay(1500);
-            digitalWrite(LED_PIN, LOW);
+            ledTimer.once(1.5, ledUitZetten); // Zet de LED uit na 1.5 seconden
+            // delay(1500);
+            // digitalWrite(LED_PIN, LOW);
           }
           if (data == "End") {
             clients[i].print("Verbinding wordt afgesloten door server");
