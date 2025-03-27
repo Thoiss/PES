@@ -18,7 +18,7 @@
 // IP-adressen van de Wemos-apparaten
 const char *wemos_ips[] = {
     "192.168.137.25", // Wemos 1
-    "192.168.137.204"  // Wemos 2
+    "192.168.137.204" // Wemos 2
 };
 const char *pi_a_ip = "192.168.137.40"; // Raspberry Pi A
 int client_fd;                          // File descriptor voor socket (nummertje voor Wemos in print)
@@ -33,6 +33,7 @@ char *PiTest = "PiTest\n";
 char *RGB = "RGB\n";
 char *PiLed = "LED";
 char *PiStatus = "Status";
+char *wemosStatus = "wemosStatus\n";
 int Waarde_Knop = 0;
 int PiWaarde_Knop = 0;
 int RGBWaarde = 0;
@@ -41,6 +42,7 @@ int pi_a_socket;
 int Pi_a_Led = 0;
 bool Versturen = false;
 ssize_t valread;
+
 
 int connect_to_wemos(const char *ip)
 { // Verbind met Wemos
@@ -120,10 +122,10 @@ int connect_to_device(const char *ip, int port)
 int vraag_knop_status(int Socket)
 {                                      // Stuur request naar wemos voor knopstatus
     memset(buffer, 0, sizeof(buffer)); // buffer leegmaken
-
+    char *token = "";
     send(client_fd, hello, strlen(hello), 0); // stuur hello naar client_fd
+    // sleep(2);
     printf("%d: Hello message sent\n", Socket);
-
 
     if (Versturen)
     {
@@ -140,7 +142,8 @@ int vraag_knop_status(int Socket)
             printf("RGB message sent\n");
             RGBWaarde = 0;
         }
-        if(Pi_a_Led == 1 && Socket == 0){
+        if (Pi_a_Led == 1 && Socket == 0)
+        {
             send(client_fd, Led, strlen(Led), 0);
             printf("Pi-Led message sent\n");
             Pi_a_Led = 0;
@@ -149,41 +152,31 @@ int vraag_knop_status(int Socket)
         }
         Versturen = false;
     }
-
-    memset(buffer, 0, sizeof(buffer)); // reset buffer
-    send(client_fd, Knop, strlen(Knop), 0);
-    // Toevoegen-aanpassen 5,D1  (Destination socket, Destination Pin)
-    read(client_fd, buffer, sizeof(buffer) - 1); // lees wat er binnenkomt
-    // printf("%s\n", buffer);
-    if (strcmp(buffer, "TRUE") == 0)
+    send(client_fd, wemosStatus, strlen(wemosStatus), 0);
+    // sleep(2);
+    read(client_fd, buffer, sizeof(buffer) - 1);
+    printf("Buffer: %s\n", buffer);
+    token = strtok(buffer, " ");
+    if (strcmp(token, "TRUE") == 0)
     { // kijk of wat ontvangen is vanaf Arduino IDE code == 'TRUE'
         Waarde_Knop = 1;
         Versturen = true;
     }
-    memset(buffer, 0, sizeof(buffer));
-    send(client_fd, PiTest, strlen(PiTest), 0);
-
-    read(client_fd, buffer, sizeof(buffer) - 1); // zelfde maar voor PiTRUE
-    // printf("%s\n", buffer);
-    if (strcmp(buffer, "PiTRUE") == 0)
+    token = strtok(NULL, " ");
+    if (strcmp(token, "PiTRUE") == 0)
     {
         PiWaarde_Knop = 1;
     }
-    memset(buffer, 0, sizeof(buffer));
-
-    send(client_fd, RGB, strlen(RGB), 0);
-
-    read(client_fd, buffer, sizeof(buffer) - 1); // zelfde maar voor PiTRUE
-    // printf("%s\n", buffer);
-
-    if (strcmp(buffer, "RGBFALSE") != 0)
+    token = strtok(NULL, " ");
+    printf("Huidig: %s\n", token);
+    if (strcmp(token, "1") == 0 || strcmp(token, "2") == 0 || strcmp(token, "3") == 0)
     {
-        RGBWaarde = atoi(buffer); // Converteer de string naar een integer
+        printf("Huidig: %s\n", token);
+        RGBWaarde = atoi(token); // Converteer de string naar een integer
+        printf("RGBWaarde: %d\n", RGBWaarde);
         Versturen = true;
     }
     memset(buffer, 0, sizeof(buffer));
-
-
 }
 
 int Pi_Connectie()
@@ -202,7 +195,8 @@ int Pi_Connectie()
     buffer[valread] = '\0'; // Zorg ervoor dat de string correct wordt afgesloten
     printf("Ontvangen van Pi-A: %s\n", buffer);
     // usleep(1000000);
-    if(strcmp(buffer, "aan") == 0){
+    if (strcmp(buffer, "aan") == 0)
+    {
         Pi_a_Led = 1;
         Versturen = true;
     }
@@ -214,7 +208,7 @@ int main()
     while (1)
     {
         Pi_Connectie();
-        if (Socket < Devices)
+        while (Socket < Devices)
         {
             printf("%d\n", Socket);
             client_fd = connect_to_wemos(wemos_ips[Socket]); // Wijst socket toe aan client_fd
