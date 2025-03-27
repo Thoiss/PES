@@ -2,7 +2,7 @@
 const char* ssid = "pinetwerk";
 const char* password = "bok12345";
 WiFiServer server(8888);
-
+char Status[200] = "";
 #define MAX_CLIENTS 5                               // Aantal toegestane clients
 #define Time_Delay 10000                            // 10 seconden timeout
 #define BUTTON_PIN D1                               // Knop op D1 (GPIO5)
@@ -80,7 +80,38 @@ void loop() {
           Serial.print(": ");
           Serial.println(data);
           // clients[i].print("Echo: " + data);  // Stuur bericht terug
-
+          if (data == "wemosStatus") {
+            memset(Status, 0, sizeof(Status));
+            if (Print_Knop == 1) {
+              Serial.print("Op data is knop uitgelezen");
+              strcat(Status, " TRUE");
+              Print_Knop = 0;
+            } else {
+              strcat(Status, " FALSE");
+            }
+            if (PiPrint_Knop == 1) {
+              Serial.print("Op data is knop uitgelezen");
+              strcat(Status, " PiTRUE");
+              PiPrint_Knop = 0;
+            } else {
+              strcat(Status, " PiFALSE");
+            }
+            
+              if (RGB_Preset_Knop == 1) {
+                Serial.print("RGB Waarde binnengekregen \n");
+                char RGBWaardeStr[10];                   
+                sprintf(RGBWaardeStr, "%d", RGBWaarde);  
+                strcat(Status, " ");
+                Serial.printf("RGB Waarde string: %s\n", RGBWaardeStr);
+                strcat(Status, RGBWaardeStr);
+                Serial.printf("Status: %s\n", Status);
+                RGB_Preset_Knop = 0;
+              } else {
+                strcat(Status, " RGBFALSE");
+              }
+            
+            clients[i].print(Status);
+          }
 
           if (data == "End") {
             clients[i].print("Verbinding wordt afgesloten door server");
@@ -90,52 +121,13 @@ void loop() {
             clients[i].stop();          // Sluit client af
             clients[i] = WiFiClient();  // Maak de slot weer vrij
           }
-          if (data == "Knop") {
-            if (Print_Knop == 1){
-            Serial.print("Op data is knop uitgelezen");
-              clients[i].print("TRUE"); //5,D1  (Destination socket, Destination Pin)
-              Print_Knop = 0;
-            }
-            else{
-              clients[i].print("FALSE");
-            }
-          }
-          if (data == "RGB") {
-            if (RGB_Preset_Knop == 1){
-            Serial.print("RGB Waarde verstuurd \n");
-              clients[i].print(RGBWaarde);
-              RGB_Preset_Knop = 0;
-            }
-            else{
-              clients[i].print("RGBFALSE");
-            }
-          }
-          if (data == "PiTest") {
-            if (PiPrint_Knop == 1){
-            Serial.print("Op data is knop uitgelezen");
-              clients[i].print("PiTRUE"); 
-              PiPrint_Knop = 0;
-            }
-            else{
-              clients[i].print("PiFALSE");
-            }
-          }
         }
       }
-
-      // **Check timeout van 10 seconden**
-      // if (millis() - lastActiveTime[i] > Time_Delay) {
-      //   Serial.print("Client ");
-      //   Serial.print(i);
-      //   Serial.println(" is losgekoppeld wegens inactiviteit.");
-      //   clients[i].stop();          // Sluit client af
-      //   clients[i] = WiFiClient();  // Maak de slot weer vrij
-      // }
     }
   }
 
   int buttonState = digitalRead(BUTTON_PIN);  // Lees de knopstatus voor de test tussen Wemos
-  int PibuttonState = digitalRead(PI_PIN);  // Lees de knopstatus voor de Pi
+  int PibuttonState = digitalRead(PI_PIN);    // Lees de knopstatus voor de Pi
   int RGB_Preset_buttonState = digitalRead(RGB_Button);
 
   if (buttonState == LOW) {  // Knop ingedrukt
@@ -146,21 +138,19 @@ void loop() {
       }
       Print_Knop = 1;
     }
-
   }
   if (RGB_Preset_buttonState == LOW) {  // Knop ingedrukt
     delay(300);
     if (RGB_Preset_buttonState == LOW) {
       if (RGB_Preset_Knop == 0) {
         Serial.println("RGB Knop is ingedrukt.");
-        RGBWaarde ++;
-        if(RGBWaarde >= 4){
+        RGBWaarde++;
+        if (RGBWaarde >= 4) {
           RGBWaarde = 1;
         }
       }
       RGB_Preset_Knop = 1;
     }
-
   }
   if (PibuttonState == LOW) {  // Knop ingedrukt
     delay(300);
@@ -170,6 +160,5 @@ void loop() {
       }
       PiPrint_Knop = 1;
     }
-
   }
 }
