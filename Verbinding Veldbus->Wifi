@@ -17,8 +17,8 @@
 
 // IP-adressen van de Wemos-apparaten
 const char *wemos_ips[] = {
-    "192.168.137.148", // Wemos 1
-    "192.168.137.147"  // Wemos 2
+    "192.168.137.25", // Wemos 1
+    "192.168.137.204"  // Wemos 2
 };
 const char *pi_a_ip = "192.168.137.40"; // Raspberry Pi A
 int client_fd;                          // File descriptor voor socket (nummertje voor Wemos in print)
@@ -88,8 +88,8 @@ int connect_to_device(const char *ip, int port)
     }
 
     // Zet socket op non-blocking mode
-    int flags = fcntl(pi_a_socket, F_GETFL, 0);
-    fcntl(pi_a_socket, F_SETFL, flags | O_NONBLOCK);
+    int flags = fcntl(sock, F_GETFL, 0);
+    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
@@ -140,21 +140,21 @@ int vraag_knop_status(int Socket)
             printf("RGB message sent\n");
             RGBWaarde = 0;
         }
-        if(Pi_a_Led = 1 && Socket == 1){
+        if(Pi_a_Led == 1 && Socket == 0){
             send(client_fd, Led, strlen(Led), 0);
             printf("Pi-Led message sent\n");
             Pi_a_Led = 0;
             // sleep(2);
-            Versturen = false;
+            // Versturen = false;
         }
-        // Versturen = false;
+        Versturen = false;
     }
 
     memset(buffer, 0, sizeof(buffer)); // reset buffer
     send(client_fd, Knop, strlen(Knop), 0);
     // Toevoegen-aanpassen 5,D1  (Destination socket, Destination Pin)
     read(client_fd, buffer, sizeof(buffer) - 1); // lees wat er binnenkomt
-    printf("%s\n", buffer);
+    // printf("%s\n", buffer);
     if (strcmp(buffer, "TRUE") == 0)
     { // kijk of wat ontvangen is vanaf Arduino IDE code == 'TRUE'
         Waarde_Knop = 1;
@@ -164,7 +164,7 @@ int vraag_knop_status(int Socket)
     send(client_fd, PiTest, strlen(PiTest), 0);
 
     read(client_fd, buffer, sizeof(buffer) - 1); // zelfde maar voor PiTRUE
-    printf("%s\n", buffer);
+    // printf("%s\n", buffer);
     if (strcmp(buffer, "PiTRUE") == 0)
     {
         PiWaarde_Knop = 1;
@@ -174,7 +174,7 @@ int vraag_knop_status(int Socket)
     send(client_fd, RGB, strlen(RGB), 0);
 
     read(client_fd, buffer, sizeof(buffer) - 1); // zelfde maar voor PiTRUE
-    printf("%s\n", buffer);
+    // printf("%s\n", buffer);
 
     if (strcmp(buffer, "RGBFALSE") != 0)
     {
