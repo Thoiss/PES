@@ -5,6 +5,7 @@
 
 const char* ssid = "pinetwerk";
 const char* password = "bok12345";
+char Status[200] = "";
 WiFiServer server(8888);
 Ticker ledTimer;
 #define MAX_CLIENTS 5     // Aantal toegestane clients
@@ -21,7 +22,7 @@ void setRGBColor(int red, int green, int blue) {
   analogWrite(BLUE_PIN, blue);    // Blauw kanaal
 }
 
-void ledUitZetten(){
+void ledUitZetten() {
   digitalWrite(LED_PIN, LOW);
 }
 
@@ -76,7 +77,6 @@ void loop() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
       if (!clients[i]) {  // Als de slot leeg is (geen actieve client)
         clients[i] = newClient;
-        lastActiveTime[i] = millis();  // Start timer voor deze client
         Serial.print("Client verbonden op slot: ");
         Serial.println(i);
         added = true;
@@ -105,10 +105,6 @@ void loop() {
       if (clients[i].connected()) {
         if (clients[i].available()) {
           String data = clients[i].readStringUntil('\n');
-          // String data = "";
-
-          // char c = clients[i].read();
-          // data += c;
 
           data.trim();
           Serial.print("Ontvangen van client ");
@@ -116,12 +112,33 @@ void loop() {
           Serial.print(": ");
           Serial.println(data);
           // clients[i].print("Echo: " + data);  // Stuur bericht terug
+          if (data == "wemosStatus") {
+            memset(Status, 0, sizeof(Status));
+            if (Print_Knop == 1) {
+              Serial.print("Op data is knop uitgelezen");
+              strcat(Status, " TRUE");
+              Print_Knop = 0;
+              Serial.println("True toegevoegd ");
+            } else {
+              strcat(Status, " FALSE");
+            }
+            if (PiPrint_Knop == 1) {
+              Serial.print("Op data is knop uitgelezen");
+              strcat(Status, " PiTRUE");
+              Serial.println("PiTrue toegevoegd ");
+              PiPrint_Knop = 0;
+            } else {
+              strcat(Status, " PiFALSE");
+            }
+
+            strcat(Status, " RGBFALSE");
+            clients[i].print(Status);
+          }
 
 
-          lastActiveTime[i] = millis();  // Reset de timeout timer
           if (data == "Led") {
             digitalWrite(LED_PIN, HIGH);
-            ledTimer.once(1.5, ledUitZetten); // Zet de LED uit na 1.5 seconden
+            ledTimer.once(1.5, ledUitZetten);  // Zet de LED uit na 1.5 seconden
             // delay(1500);
             // digitalWrite(LED_PIN, LOW);
           }
@@ -133,19 +150,8 @@ void loop() {
             clients[i].stop();          // Sluit client af
             clients[i] = WiFiClient();  // Maak de slot weer vrij
           }
-          if(data == "RGB"){
-            clients[i].print("RGBFALSE");
-          }
 
-          if (data == "Knop") {
-            if (Print_Knop == 1) {
-              Serial.print("Op data is knop uitgelezen");
-              clients[i].print("TRUE");  //5,D1  (Destination socket, Destination Pin)
-              Print_Knop = 0;
-            } else {
-              clients[i].print("FALSE");
-            }
-          }
+
           if (data.indexOf("RGBWAARDE") != -1) {  // Check of "RGBWAARDE" aanwezig is
             int dashIndex = data.indexOf(" - ");  // Zoek de positie van " - "
 
@@ -176,52 +182,8 @@ void loop() {
               }
             }
           }
-
-          if (data == "PiTest") {
-            if (PiPrint_Knop == 1) {
-              Serial.print("Op data is knop uitgelezen");
-              clients[i].print("PiTRUE");
-              PiPrint_Knop = 0;
-            } else {
-              clients[i].print("PiFALSE");
-            }
-          }
         }
       }
-
-      // **Check timeout van 10 seconden**
-      // if (millis() - lastActiveTime[i] > Time_Delay) {
-      //   Serial.print("Client ");
-      //   Serial.print(i);
-      //   Serial.println(" is losgekoppeld wegens inactiviteit.");
-      //   clients[i].stop();          // Sluit client af
-      //   clients[i] = WiFiClient();  // Maak de slot weer vrij
-      // }
     }
   }
-
-
-
-  // int buttonState = digitalRead(BUTTON_PIN);  // Lees de knopstatus voor de test tussen Wemos
-  // int PibuttonState = digitalRead(PI_PIN);  // Lees de knopstatus voor de Pi
-  // if (buttonState == LOW) {  // Knop ingedrukt
-  //   delay(300);
-  //   if (buttonState == LOW) {
-  //     if (Print_Knop == 0) {
-  //       Serial.println("Knop is ingedrukt.");
-  //     }
-  //     Print_Knop = 1;
-  //   }
-
-  // }
-  // if (PibuttonState == LOW) {  // Knop ingedrukt
-  //   delay(300);
-  //   if (PibuttonState == LOW) {
-  //     if (PiPrint_Knop == 0) {
-  //       Serial.println("PiKnop is ingedrukt.");
-  //     }
-  //     PiPrint_Knop = 1;
-  //   }
-
-  // }
 }
