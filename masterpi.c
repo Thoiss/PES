@@ -1,3 +1,7 @@
+//gcc -o nonblocking socket_rpiA_nonblocking.c -lwiringPi
+ // ./mastercode.c
+ //sudo i2cdetect -y 1
+
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +18,7 @@
 #define SLAVE_ADDRESS 0x11  // Het I2C-adres van de STM32 slave
 #define SLAVE_ADDRESS2 0x13
 
-int button_status;
+int button_status = 0;
 
 int send_message(int socket, char *message) {
     // Stuur een bericht naar de client
@@ -138,7 +142,7 @@ int main(int argc, char const *argv[]) {
             }
 
             // Voeg de nieuwe client toe aan de set van client_sockets
-            if (num_clients < 1) {
+            if (num_clients < 29) {
                 client_sockets[num_clients++] = new_socket;
             } else {
                 printf("Maximaal aantal clients bereikt.\n");
@@ -151,6 +155,13 @@ int main(int argc, char const *argv[]) {
 
             if (FD_ISSET(sd, &readfds)) {
                 valread = read(sd, buffer, sizeof(buffer) - 1);
+
+                if (valread == 0) {
+                    printf("Client %d heeft de verbinding verbroken\n", sd);
+                    close(sd);
+                    client_sockets[i] = -1;
+                    num_clients--;
+                }
                 if (valread > 0) {
                     buffer[valread] = '\0'; // Zorg ervoor dat de string goed eindigt
                     printf("Ontvangen bericht van client %d: %s\n", sd, buffer);
@@ -171,19 +182,34 @@ int main(int argc, char const *argv[]) {
                                 }
                             }
                             if (button_status == 1) {
+                              //  wiringPiI2CWrite(fb, '1');
                                 int sd = client_sockets[i];
                                 char message[] = "aan";
                                 if (send_message(sd, message) == 0) {
                                     printf("knopstatus client: %d.\n", sd);
                                     }
                                 }
+                            if (button_status == 3) {
+                                wiringPiI2CWrite(fb, '1');
+                            }
+                                delay(1000);
+                    wiringPiI2CWrite(fb, '0');
+                            
                         }
-                         }
-                     }
-                }
+                        
+                    } else {
+                            int sd = client_sockets[i];
+                                char message[] = "niet correct ontvangen";
+                                if (send_message(sd, message) == 0) {
+                                    printf("idk man gestuurd: %d.\n", sd);
+                                    }
+                                }
         }
+    }
         memset(buffer, 0, sizeof(buffer)); // Reset de buffer
     }
+
+}
 
     return 0;
 }
