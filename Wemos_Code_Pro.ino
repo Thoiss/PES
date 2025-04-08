@@ -131,7 +131,7 @@ void loop() {
   int RGB_Preset_buttonState = digitalRead(RGB_Button);
 
   if (buttonState == LOW) {  // Knop ingedrukt
-    delay(300);
+    delay(200);
     if (buttonState == LOW) {
       if (Print_Knop == 0) {
         Serial.println("Knop is ingedrukt.");
@@ -140,7 +140,7 @@ void loop() {
     }
   }
   if (RGB_Preset_buttonState == LOW) {  // Knop ingedrukt
-    delay(300);
+    delay(250);
     if (RGB_Preset_buttonState == LOW) {
       if (RGB_Preset_Knop == 0) {
         Serial.println("RGB Knop is ingedrukt.");
@@ -153,7 +153,7 @@ void loop() {
     }
   }
   if (PibuttonState == LOW) {  // Knop ingedrukt
-    delay(300);
+    delay(200);
     if (PibuttonState == LOW) {
       if (PiPrint_Knop == 0) {
         Serial.println("PiKnop is ingedrukt.");
