@@ -17,27 +17,14 @@
 
 // IP-adressen van de Wemos-apparaten
 const char *wemos_ips[] = {
-    "192.168.137.25", // Wemos 1
-    "192.168.137.204" // Wemos 2
+    "192.168.137.220", // Wemos 1
+    "192.168.137.178" // Wemos 2
 };
 const char *pi_a_ip = "192.168.137.40"; // Raspberry Pi A
 int client_fd;                          // File descriptor voor socket (nummertje voor Wemos in print)
 struct sockaddr_in serv_addr;
 char buffer[1024] = {0};
-char RGBSend[15] = " - RGBWAARDE";
-char *hello = "Hello from client\n";
-char *sluiten = "End\n";
-char *Led = "Led\n";
-char *Knop = "Knop\n";
-char *PiTest = "PiTest\n";
-char *RGB = "RGB\n";
-char *PiLed = "LED";
-char *PiStatus = "Status";
-char *wemosStatus = "wemosStatus\n";
-int Waarde_Knop = 0;
 int PiWaarde_Knop = 0;
-int RGBWaarde = 0;
-int Socket = 0;
 int pi_a_socket;
 int Pi_a_Led = 0;
 bool Versturen = false;
@@ -71,7 +58,7 @@ int connect_to_wemos(const char *ip)
     printf("Verbonden met %d Wemos op %s\n", sock, ip);
     return sock;
 }
-int connect_to_device(const char *ip, int port)
+int connect_to_pi(const char *ip, int port)
 { // Verbind met Pi-a
     int sock;
     struct sockaddr_in serv_addr;
@@ -121,8 +108,15 @@ int connect_to_device(const char *ip, int port)
 
 int vraag_knop_status(int Socket)
 {                                      // Stuur request naar wemos voor knopstatus
+    const char *hello = "Hello from client\n";
+    const char *Led = "Led\n";
+    const char *wemosStatus = "wemosStatus\n";
+    char RGBSend[15] = " - RGBWAARDE";
+    int Waarde_Knop = 0;
+    int RGBWaarde = 0;
+
     memset(buffer, 0, sizeof(buffer)); // buffer leegmaken
-    char *token = "";
+    const char *token = "";
     send(client_fd, hello, strlen(hello), 0); // stuur hello naar client_fd
     // sleep(2);
     printf("%d: Hello message sent\n", Socket);
@@ -177,10 +171,13 @@ int vraag_knop_status(int Socket)
         Versturen = true;
     }
     memset(buffer, 0, sizeof(buffer));
+    return 0;
 }
 
 int Pi_Connectie()
 {
+    const char *PiLed = "LED";
+    const char *PiStatus = "Status";
 
     if (PiWaarde_Knop == 1)
     {
@@ -201,17 +198,22 @@ int Pi_Connectie()
         Versturen = true;
     }
     memset(buffer, 0, sizeof(buffer));
+    return 0;
 }
 int main()
 {
-    pi_a_socket = connect_to_device(pi_a_ip, PI_A_PORT);
+    int Socket = 0;
+
+    pi_a_socket = connect_to_pi(pi_a_ip, PI_A_PORT);
     while (1)
     {
         Pi_Connectie();
         while (Socket < Devices)
         {
-            printf("%d\n", Socket);
+            printf("socket =%d\n", Socket);
             client_fd = connect_to_wemos(wemos_ips[Socket]); // Wijst socket toe aan client_fd
+            printf("Client fd = %d\n", client_fd);
+            sleep(3);
             // zet_led_aan();
             // sleep(2); // Wacht even voordat de volgende check start
             Socket++;
