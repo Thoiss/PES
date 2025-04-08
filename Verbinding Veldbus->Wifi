@@ -10,23 +10,25 @@
 #include <sys/select.h> // Voor fd_set en select()
 #include <sys/time.h>   // Voor struct timeval
 
-#define PORT 8888
-#define PI_A_PORT 8080
+#define PORT 8888 // Wemos port
+#define PI_A_PORT 8080 // Pi-A port
 #define TIMEOUT 3 // Timeout in seconden
 #define Devices 2
 
 // IP-adressen van de Wemos-apparaten
 const char *wemos_ips[] = {
-    "192.168.137.220", // Wemos 1
-    "192.168.137.178" // Wemos 2
+    "192.168.137.26", // Wemos 1
+    "192.168.137.71" // Wemos 2
 };
-const char *pi_a_ip = "192.168.137.40"; // Raspberry Pi A
-int client_fd;                          // File descriptor voor socket (nummertje voor Wemos in print)
+const char *pi_a_ip = "192.168.137.31"; // Raspberry Pi A             
 struct sockaddr_in serv_addr;
 char buffer[1024] = {0};
 int PiWaarde_Knop = 0;
 int pi_a_socket;
+int Waarde_Knop = 0;
 int Pi_a_Led = 0;
+char RGBSend[15] = " - RGBWAARDE";
+int RGBWaarde = 0;
 bool Versturen = false;
 ssize_t valread;
 
@@ -35,13 +37,13 @@ int connect_to_wemos(const char *ip)
 { // Verbind met Wemos
     int sock;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    { // socket creation
+    { // socket creation for Wemos
         printf("Socket creation error\n");
         return -1;
     }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_family = AF_INET; // Ipv4
+    serv_addr.sin_port = htons(PORT); 
 
     if (inet_pton(AF_INET, ip, &serv_addr.sin_addr) <= 0)
     { // ip adres toewijzen
@@ -64,7 +66,7 @@ int connect_to_pi(const char *ip, int port)
     struct sockaddr_in serv_addr;
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
+    { // Create socket for Pi
         return -1;
     }
 
@@ -77,8 +79,8 @@ int connect_to_pi(const char *ip, int port)
     }
 
     // Zet socket op non-blocking mode
-    int flags = fcntl(sock, F_GETFL, 0);
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+        int flags = fcntl(sock, F_GETFL, 0); // request huidige flags
+        fcntl(sock, F_SETFL, flags | O_NONBLOCK); // voeg nonblock toe aan flags
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
@@ -111,57 +113,54 @@ int vraag_knop_status(int Socket)
     const char *hello = "Hello from client\n";
     const char *Led = "Led\n";
     const char *wemosStatus = "wemosStatus\n";
-    char RGBSend[15] = " - RGBWAARDE";
-    int Waarde_Knop = 0;
-    int RGBWaarde = 0;
+
 
     memset(buffer, 0, sizeof(buffer)); // buffer leegmaken
     const char *token = "";
-    send(client_fd, hello, strlen(hello), 0); // stuur hello naar client_fd
+    send(Socket, hello, strlen(hello), 0); // stuur hello naar Socket x
     // sleep(2);
     printf("%d: Hello message sent\n", Socket);
 
-    if (Versturen)
+    if (Versturen) // check of iets uitgevoerd moet worden, true wordt gezet op de functie hierna (binnenkomende statusberichten) (ln. 157 o.a.)
     {
-        if (Waarde_Knop == 1)
+        if (Waarde_Knop == 1 )
         {
-            send(client_fd, Led, strlen(Led), 0);
+            send(Socket, Led, strlen(Led), 0);
             printf("Led message sent\n");
             Waarde_Knop = 0;
         }
         if (RGBWaarde != 0)
         {
             snprintf(RGBSend, sizeof(RGBSend), "%d - RGBWAARDE\n", RGBWaarde);
-            send(client_fd, RGBSend, strlen(RGBSend), 0);
+            send(Socket, RGBSend, strlen(RGBSend), 0);
             printf("RGB message sent\n");
             RGBWaarde = 0;
-        }
-        if (Pi_a_Led == 1 && Socket == 0)
+        }  
+        if (Pi_a_Led == 1 ) // If bericht van Pi-A ontvangen
         {
-            send(client_fd, Led, strlen(Led), 0);
+            send(Socket, Led, strlen(Led), 0);
             printf("Pi-Led message sent\n");
             Pi_a_Led = 0;
-            // sleep(2);
-            // Versturen = false;
         }
+        if(Socket == 5){ // bij de laatste Socket, zet versturen op false
         Versturen = false;
+        }
     }
-    send(client_fd, wemosStatus, strlen(wemosStatus), 0);
-    // sleep(2);
-    read(client_fd, buffer, sizeof(buffer) - 1);
-    printf("Buffer: %s\n", buffer);
-    token = strtok(buffer, " ");
-    if (strcmp(token, "TRUE") == 0)
+    send(Socket, wemosStatus, strlen(wemosStatus), 0); // status request
+    read(Socket, buffer, sizeof(buffer) - 1); // leest response
+    printf("Buffer: %s\n", buffer); // print bericht
+    token = strtok(buffer, " "); // leest/parst tot 1e spatie in bericht 'FALSE PiFALSE RGBFALSE' -> wijst toe op 'token'
+    if (strcmp(token, "TRUE") == 0) // als token klopt...
     { // kijk of wat ontvangen is vanaf Arduino IDE code == 'TRUE'
         Waarde_Knop = 1;
         Versturen = true;
     }
-    token = strtok(NULL, " ");
+    token = strtok(NULL, " "); // de rest van de string (onthouden door strtok) lezen tot spatie
     if (strcmp(token, "PiTRUE") == 0)
     {
         PiWaarde_Knop = 1;
     }
-    token = strtok(NULL, " ");
+    token = strtok(NULL, " "); // de rest van de string (onthouden door strtok) lezen tot spatie
     printf("Huidig: %s\n", token);
     if (strcmp(token, "1") == 0 || strcmp(token, "2") == 0 || strcmp(token, "3") == 0)
     {
@@ -186,43 +185,37 @@ int Pi_Connectie()
         PiWaarde_Knop = 0;
     }
     memset(buffer, 0, sizeof(buffer));
-    send(pi_a_socket, PiStatus, strlen(PiStatus), 0);
+    send(pi_a_socket, PiStatus, strlen(PiStatus), 0); // status request naar Pi-A
     printf("Bericht Status verstuurt naar Pi-A \n");
     valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
     buffer[valread] = '\0'; // Zorg ervoor dat de string correct wordt afgesloten
     printf("Ontvangen van Pi-A: %s\n", buffer);
-    // usleep(1000000);
     if (strcmp(buffer, "aan") == 0)
     {
         Pi_a_Led = 1;
-        Versturen = true;
+        Versturen = true; // stuur naar wemos dat lampje aan moet
     }
     memset(buffer, 0, sizeof(buffer));
     return 0;
 }
 int main()
 {
-    int Socket = 0;
-
+    int Socket [Devices] = {0};
+    int i = 0;
     pi_a_socket = connect_to_pi(pi_a_ip, PI_A_PORT);
     while (1)
     {
         Pi_Connectie();
-        while (Socket < Devices)
+        while (i < Devices)
         {
-            printf("socket =%d\n", Socket);
-            client_fd = connect_to_wemos(wemos_ips[Socket]); // Wijst socket toe aan client_fd
-            printf("Client fd = %d\n", client_fd);
-            sleep(3);
-            // zet_led_aan();
-            // sleep(2); // Wacht even voordat de volgende check start
-            Socket++;
+            Socket[i] = connect_to_wemos(wemos_ips[i]); // connect naar wemos op basis van ip
+            printf("socket = %d\n", Socket[i]);
+            i++;
         }
         for (int i = 0; i < Devices; i++)
         { // uitlezen
-            // sleep(1);
-            client_fd = i + 4; // 3 zonder Pi-A 4 Met Pi-A
-            vraag_knop_status(i);
+            printf("Vraag Socket = %d\n", Socket[i]);
+            vraag_knop_status(Socket[i]);
         }
     }
 
