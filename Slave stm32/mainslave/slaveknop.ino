@@ -25,7 +25,7 @@ int leesstatus() {  // Lees de status van de knop (de pin is LOW als de knop is 
     }
 
     if (buttonState2 == LOW) {
-        delay(150);  // Debouncing voor knop 2
+        delay(50);  // Debouncing voor knop 2
         if (digitalRead(BUTTON_PIN2) == LOW) {
             Slave1_Knop_Waarde = 3;
             Serial.println("Knop 2 ingedrukt");
