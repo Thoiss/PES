@@ -1,0 +1,8 @@
+#ifndef WEMOS_CODE_PRO_DATAONTVANGENVERSTUREN_H
+#define WEMOS_CODE_PRO_DATAONTVANGENVERSTUREN_H
+
+#include "globals.h"
+
+void dataOntvangenVersturen();
+
+#endif  // WEMOS_CODE_PRO_DATAONTVANGENVERSTUREN_H
