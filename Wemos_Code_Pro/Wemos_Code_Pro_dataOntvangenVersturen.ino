@@ -19,14 +19,12 @@ void dataOntvangenVersturen() {
             if (Print_Knop == 1) {
               Serial.print("Op data is knop uitgelezen");
               strcat(Status, " TRUE");
-              Print_Knop = 0;
             } else {
               strcat(Status, " FALSE");
             }
             if (PiPrint_Knop == 1) {
               Serial.print("Op data is knop uitgelezen");
               strcat(Status, " PiTRUE");
-              PiPrint_Knop = 0;
             } else {
               strcat(Status, " PiFALSE");
             }
@@ -38,7 +36,6 @@ void dataOntvangenVersturen() {
               Serial.printf("RGB Waarde string: %s\n", RGBWaardeStr);
               strcat(Status, RGBWaardeStr);
               Serial.printf("Status: %s\n", Status);
-              RGB_Preset_Knop = 0;
             } else {
               strcat(Status, " RGBFALSE");
             }
@@ -47,6 +44,17 @@ void dataOntvangenVersturen() {
           if (data == "Hello from client") {
             clients[i].print(deviceNaam);
           }
+          if (data == "LED_ACK") {
+            Print_Knop = 0;
+          }
+          if (data == "PILED_ACK") {
+            PiPrint_Knop = 0;
+          }
+          if (data == "RGB_ACK") {
+            RGB_Preset_Knop = 0;
+            ;
+          }
+
           if (data == "End") {
             clients[i].print("Verbinding wordt afgesloten door server");
             Serial.print("Client ");
