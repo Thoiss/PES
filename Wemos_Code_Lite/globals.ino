@@ -3,7 +3,10 @@
 // WiFi
 const char* ssid     = "pinetwerk";
 const char* password = "bok12345";
-
+IPAddress ip(192, 168, 137, 30);        // IP van deze Wemos
+IPAddress gateway(192, 168, 137, 1);    // IP van de Raspberry Pi (de gateway)
+IPAddress subnet(255, 255, 255, 0);   // Subnetmasker
+  
 // Status buffer
 char Status[200] = "";
 
