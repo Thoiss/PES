@@ -4,12 +4,11 @@
 #include "Wemos_Code_Pro_dataOntvangenVersturen.h"
 #include "Wemos_Code_Pro_inputs.h"
 
-const char* ssid = "pinetwerk";
-const char* password = "bok12345";
-
 void setup() {
   Serial.begin(115200);
   Serial.println("\nOpstarten...");
+  WiFi.config(ip, gateway, subnet);
+  WiFi.hostname("wemosPro");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
