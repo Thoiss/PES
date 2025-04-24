@@ -10,6 +10,9 @@
 // WiFi credentials
 extern const char* ssid;
 extern const char* password;
+extern IPAddress ip;        // IP van deze Wemos
+extern IPAddress gateway;    // IP van de Raspberry Pi (de gateway)
+extern IPAddress subnet;   // Subnetmasker
 
 // Status buffer
 extern char Status[200];
