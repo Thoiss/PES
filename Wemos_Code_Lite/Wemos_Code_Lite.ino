@@ -5,6 +5,8 @@
 void setup() {
   Serial.begin(115200);
   Serial.println("\nOpstarten...");
+  WiFi.config(ip, gateway, subnet);
+  WiFi.hostname("wemosLite");
   Serial.println("Sensor gevonden!");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
