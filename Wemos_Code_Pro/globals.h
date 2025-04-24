@@ -19,4 +19,11 @@ extern int PiPrint_Knop;
 extern int RGB_Preset_Knop;
 extern int RGBWaarde;
 
+// WiFi
+extern const char* ssid;
+extern const char* password;
+extern IPAddress ip;        // IP van deze Wemos
+extern IPAddress gateway;    // IP van de Raspberry Pi (de gateway)
+extern IPAddress subnet;   // Subnetmasker
+
 #endif  // GLOBALS_H
