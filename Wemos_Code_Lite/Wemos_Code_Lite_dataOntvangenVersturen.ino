@@ -47,7 +47,6 @@ void dataOntvangenVersturen() {
       }
       // Led-aansturing
       if (data == "Led") {
-        clients[i].print("LEDAAN");
         digitalWrite(LED_PIN, HIGH);
         ledTimer.once(1.5, ledUitZetten);
       }
@@ -61,10 +60,9 @@ void dataOntvangenVersturen() {
         clients[i].stop();
         clients[i] = WiFiClient();
       }
-      
+
       // RGBWAARDE preset
       if (data.indexOf("RGBWAARDE") != -1) {
-        clients[i].print("RGBAAN");
         int dashIndex = data.indexOf(" - ");
         if (dashIndex != -1) {
           String numString = data.substring(0, dashIndex);

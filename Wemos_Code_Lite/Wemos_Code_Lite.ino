@@ -3,7 +3,7 @@
 #include "Wemos_Code_Lite_dataOntvangenVersturen.h"
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(57600);
   Serial.println("\nOpstarten...");
   WiFi.config(ip, gateway, subnet);
   WiFi.hostname("wemosLite");
