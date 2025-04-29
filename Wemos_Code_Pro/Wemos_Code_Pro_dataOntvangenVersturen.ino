@@ -17,14 +17,14 @@ void dataOntvangenVersturen() {
           if (data == "wemosStatus") {
             memset(Status, 0, sizeof(Status));
             if (Print_Knop == 1) {
-              Serial.print("Op data is knop uitgelezen");
+              Serial.print("Op data is knop uitgelezen \n");
               strcat(Status, " TRUE");
               Print_Knop = 0;
             } else {
               strcat(Status, " FALSE");
             }
             if (PiPrint_Knop == 1) {
-              Serial.print("Op data is knop uitgelezen");
+              Serial.print("Op data is knop uitgelezen \n");
               strcat(Status, " PiTRUE");
               PiPrint_Knop = 0;
             } else {
@@ -43,6 +43,8 @@ void dataOntvangenVersturen() {
               strcat(Status, " RGBFALSE");
             }
             clients[i].print(Status);
+            Serial.print("Verstuurd data: ");
+            Serial.println(Status);
           }
           if (data == "Hello from client") {
             clients[i].print(deviceNaam);

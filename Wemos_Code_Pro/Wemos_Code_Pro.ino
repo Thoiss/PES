@@ -21,6 +21,7 @@ void setup() {
 
   server.begin();  // Start de server
 
+
   pinMode(PI_PIN, INPUT_PULLUP);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(RGB_Button, INPUT_PULLUP);
