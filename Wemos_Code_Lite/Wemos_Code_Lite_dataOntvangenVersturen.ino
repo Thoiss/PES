@@ -1,5 +1,5 @@
 #include "globals.h"
-#define deviceNaam "LITE"
+#define deviceNaam " LITE"
 void setRGBColor(int red, int green, int blue) {
   analogWrite(RED_PIN, red);
   analogWrite(GREEN_PIN, green);
@@ -39,12 +39,11 @@ void dataOntvangenVersturen() {
           strcat(Status, " PiFALSE");
         }
         strcat(Status, " RGBFALSE");
+        strcat(Status, deviceNaam);
         clients[i].print(Status);
       }
 
-      if (data == "Hello from client") {
-        clients[i].print(deviceNaam);
-      }
+
       // Led-aansturing
       if (data == "Led") {
         digitalWrite(LED_PIN, HIGH);

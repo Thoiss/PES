@@ -1,6 +1,6 @@
 #include "globals.h"
 #include <Arduino.h>
-#define deviceNaam "PRO"
+#define deviceNaam " PRO"
 void dataOntvangenVersturen() {
   // Check actieve clients
   for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -19,14 +19,13 @@ void dataOntvangenVersturen() {
             if (Print_Knop == 1) {
               Serial.print("Op data is knop uitgelezen \n");
               strcat(Status, " TRUE");
-              Print_Knop = 0;
+              
             } else {
               strcat(Status, " FALSE");
             }
             if (PiPrint_Knop == 1) {
               Serial.print("Op data is knop uitgelezen \n");
               strcat(Status, " PiTRUE");
-              PiPrint_Knop = 0;
             } else {
               strcat(Status, " PiFALSE");
             }
@@ -38,18 +37,28 @@ void dataOntvangenVersturen() {
               Serial.printf("RGB Waarde string: %s\n", RGBWaardeStr);
               strcat(Status, RGBWaardeStr);
               Serial.printf("Status: %s\n", Status);
-              RGB_Preset_Knop = 0;
             } else {
               strcat(Status, " RGBFALSE");
             }
+            strcat(Status, deviceNaam);
             clients[i].print(Status);
             Serial.print("Verstuurd data: ");
             Serial.println(Status);
           }
-          if (data == "Hello from client") {
-            clients[i].print(deviceNaam);
+          else if (data == "LED_ACK") {
+          Print_Knop = 0;
           }
-          if (data == "End") {
+          else if (data == "PILED_ACK") {
+          PiPrint_Knop = 0;;
+          }
+          else if (data == "RGB_ACK") {
+          RGB_Preset_Knop = 0;
+          }
+          else  if (data == "Test") {
+          clients[i].print(Status);
+          }
+          
+          else if (data == "End") {
             clients[i].print("Verbinding wordt afgesloten door server");
             Serial.print("Client ");
             Serial.print(i);
