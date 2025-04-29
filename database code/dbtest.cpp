@@ -1,3 +1,5 @@
+//gcc dbtest.cpp -o dbtest -lmariadb
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <mariadb/mysql.h>
