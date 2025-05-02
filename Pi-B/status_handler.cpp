@@ -1,67 +1,59 @@
-#include "globals.h"
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include "status_handler.hpp"
 
-int vraag_knop_status(int Socket)
-{ // Stuur request naar wemos voor knopstatus
-    const char *hello       = "Hello from client\n";
-    const char *Led         = "Led\n";
+StatusHandler::StatusHandler(int socket, WemosAansturen& aansturen)
+    : socket_(socket), wemosAansturen_(aansturen)
+{}
+
+int StatusHandler::vraagKnopStatus()     // Stuur request naar wemos voor knopstatus
+{
+    const char *hello      = "Hello from client\n";
     const char *wemosStatus = "wemosStatus\n";
+    char *deviceNaam;
+    int retry = 0;
+    send(socket_, wemosStatus, strlen(wemosStatus), 0);   // status request
+    memset(buffer, 0, sizeof(buffer));
+    read(socket_, buffer, sizeof(buffer) - 1);            // leest response
+    // printf("Buffer na aansturen wemos: %s\n", buffer);
+    while (buffer[0] == '\0' && retry < 3) {   
+        retry++;
+        memset(buffer, 0, sizeof(buffer));
+        read(socket_, buffer, sizeof(buffer) - 1);
+        printf("Buffer while loop: %s\n", buffer);
+        send(socket_, "Test\n", strlen("Test\n"), 0);
+    }
 
-    memset(buffer, 0, sizeof(buffer));        // buffer leegmaken
-    send(Socket, hello, strlen(hello), 0);    // stuur hello naar Socket x
-    printf("%d: Hello message sent\n", Socket);
+    if (buffer[0] != '\0') {
+        printf("Start token: %s\n", buffer);
+        char *token = strtok(buffer, " ");    // leest/parst tot 1e spatie
 
-    if (Versturen) // check of iets uitgevoerd moet worden, true wordt gezet door Pi_Connectie()
-    {
-        if (Waarde_Knop == 1 )
-        {
-            send(Socket, Led, strlen(Led), 0);
-            printf("Led message sent\n");
-            Waarde_Knop = 0;
+        if (strcmp(token, "TRUE") == 0) {     // als token 'TRUE'
+            send(socket_, "LED_ACK\n", strlen("LED_ACK\n"), 0);
+            Waarde_Knop = 1;
+            Versturen = true;
         }
-        if (RGBWaarde != 0)
-        {
-            snprintf(RGBSend, sizeof(RGBSend), "%d - RGBWAARDE\n", RGBWaarde);
-            send(Socket, RGBSend, strlen(RGBSend), 0);
-            printf("RGB message sent\n");
-            RGBWaarde = 0;
-        }  
-        if (Pi_a_Led == 1 ) // If bericht van Pi-A ontvangen
-        {
-            send(Socket, Led, strlen(Led), 0);
-            printf("Pi-Led message sent\n");
+        else if (strcmp(token, "FALSE") != 0) {
+            return 0;
         }
-        if (Socket == 5) { // bij de laatste Socket, zet versturen op false
-            Versturen = false;
-            Pi_a_Led  = 0;
+
+        token = strtok(nullptr, " ");         // volgende deel
+        if (strcmp(token, "PiTRUE") == 0) {
+            send(socket_, "PILED_ACK\n", strlen("PILED_ACK\n"), 0);
+            PiWaarde_Knop = 1;
         }
-    }
 
-    send(Socket, wemosStatus, strlen(wemosStatus), 0); // status request
-    read(Socket, buffer, sizeof(buffer) - 1);          // leest response
-    printf("Buffer: %s\n", buffer);                     // print bericht
-
-    char *token = strtok(buffer, " "); // leest/parst tot 1e spatie
-    if (strcmp(token, "TRUE") == 0)    // als token klopt...
-    { // kijk of ontvangen == 'TRUE'
-        Waarde_Knop = 1;
-        Versturen    = true;
+        token = strtok(nullptr, " ");         // volgende deel
+        if (strcmp(token, "1") == 0
+         || strcmp(token, "2") == 0
+         || strcmp(token, "3") == 0) {
+            RGBWaarde = atoi(token);          // Converteer naar integer
+            send(socket_, "RGB_ACK\n", strlen("RGB_ACK\n"), 0);
+            printf("RGBWaarde: %d\n", RGBWaarde);
+            Versturen = true;
+        }
+        token = strtok(nullptr, " ");         // volgende deel
+        deviceNaam = token;
     }
-    token = strtok(NULL, " ");         // volgende deel
-    if (strcmp(token, "PiTRUE") == 0)
-    {
-        PiWaarde_Knop = 1;
-    }
-    token = strtok(NULL, " ");         // volgende deel
-    printf("Huidig: %s\n", token);
-    if (strcmp(token, "1") == 0 || strcmp(token, "2") == 0 || strcmp(token, "3") == 0)
-    {
-        RGBWaarde = atoi(token);       // Converteer naar integer
-        printf("RGBWaarde: %d\n", RGBWaarde);
-        Versturen = true;
-    }
+    wemosAansturen_.stuurWemosAan(deviceNaam, socket_);
     memset(buffer, 0, sizeof(buffer));
     return 0;
 }

@@ -1,37 +1,46 @@
-//Compileren (wel in de goede folder zitten in de terminal)
-// g++ *.cpp -o piBmain
+// Compileren (in de juiste folder):
+//   g++ *.cpp -o piBmain
 
 #include "globals.h"
-#include "wemos_connection.h"
-#include "pi_connection.h"
-#include "status_handler.h"
+#include "wemos_connection.hpp"
+#include "pi_connection.hpp"
+#include "status_handler.hpp"
+#include "wemos_aansturen.hpp"
+
 
 int main()
 {
     int Socket[Devices] = {0};
-    int i = 0;
+    
+    WemosAansturen aanstuurder;
 
     // Eerst Pi-A verbinden
-    pi_a_socket = connect_to_pi(pi_a_ip, PI_A_PORT);
-
+    PiConnection piConn;
+    pi_a_socket = piConn.connectToPi(pi_a_ip, PI_A_PORT);
+    int tellerPerformance =0;
+    int i = 0;
     while (1)
     {
         // Haal status van Pi-A op en stuur LED-bericht indien nodig
-        Pi_Connectie();
-
+        piConn.handlePiConnection();
         // Verbind met alle Wemos-apparaten
         while (i < Devices)
         {
-            Socket[i] = connect_to_wemos(wemos_ips[i]);
+            
+            WemosConnection wemosConn;
+            Socket[i] = wemosConn.connectToWemos(wemos_ips[i]);
             printf("socket = %d\n", Socket[i]);
             i++;
         }
 
-        // Voor elke Wemos: vraag knopstatus en verwerk response
+        // Voor elke Wemos: vraag knopstatus met StatusHandler
         for (int j = 0; j < Devices; j++)
         {
-            printf("Vraag Socket = %d\n", Socket[j]);
-            vraag_knop_status(Socket[j]);
+            tellerPerformance++;
+            printf("%d Huidige Socket = %d\n", tellerPerformance, Socket[j]);
+            StatusHandler handler(Socket[j], aanstuurder);
+            handler.vraagKnopStatus();
+            
         }
     }
 

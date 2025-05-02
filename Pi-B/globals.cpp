@@ -2,10 +2,10 @@
 
 // IP-adressen
 const char *wemos_ips[Devices] = {
-    "192.168.137.152", // Wemos 1
-    "192.168.137.224"  // Wemos 2
+     "192.168.137.20", // Wemos 1
+     "192.168.137.30"  // Wemos 2
 };
-const char *pi_a_ip = "192.168.137.31"; // Raspberry Pi A
+const char *pi_a_ip = "192.168.137.46"; // Raspberry Pi A
 
 // Socket-structuur voor connect_to_wemos()
 struct sockaddr_in serv_addr;
