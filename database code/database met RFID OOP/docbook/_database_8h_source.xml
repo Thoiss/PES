@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="__database_8h_source" xml:lang="en-US">
+<title>Database.h</title>
+Go to the documentation of this file.<programlisting linenumbering="unnumbered">1 <emphasis role="preprocessor">#ifndef&#32;Database_H</emphasis>
+2 <emphasis role="preprocessor">#define&#32;Database_H</emphasis>
+3 
+4 <emphasis role="preprocessor">#include&#32;&lt;mariadb/mysql.h&gt;</emphasis>
+5 <emphasis role="preprocessor">#include&#32;&lt;string&gt;</emphasis>
+6 
+7 <emphasis role="keyword">class&#32;</emphasis><link linkend="_class_database_1a353d18e4ab77fcce1a0e8fa624ffb38a">Database</link>&#32;{
+8 <emphasis role="keyword">private</emphasis>:
+9 MYSQL&#32;*<link linkend="_class_database_1ab90148100b13edf67d3bf255c98e058c">conn</link>;
+10 std::string&#32;<link linkend="_class_database_1a463d42c49c2c5aaa6727839f73fb204f">server</link>;
+11 std::string&#32;<link linkend="_class_database_1a378941bcf1ce83ad76f45cb96f64aeb0">user</link>;
+12 std::string&#32;<link linkend="_class_database_1a21e2314ee4e60283f59afe330a552e50">password</link>;
+13 std::string&#32;<link linkend="_class_database_1a6d9af6ef44b1548450e4200d0a05cabe">database</link>;
+14 
+15 
+16 <emphasis role="keyword">public</emphasis>:
+17 &#32;&#32;&#32;&#32;<link linkend="_class_database_1a353d18e4ab77fcce1a0e8fa624ffb38a">Database</link>(<emphasis role="keyword">const</emphasis>&#32;std::string&amp;&#32;<link linkend="_class_database_1a463d42c49c2c5aaa6727839f73fb204f">server</link>,&#32;<emphasis role="keyword">const</emphasis>&#32;std::string&amp;&#32;<link linkend="_class_database_1a378941bcf1ce83ad76f45cb96f64aeb0">user</link>,&#32;<emphasis role="keyword">const</emphasis>&#32;std::string&amp;&#32;<link linkend="_class_database_1a21e2314ee4e60283f59afe330a552e50">password</link>,&#32;<emphasis role="keyword">const</emphasis>&#32;std::string&amp;&#32;<link linkend="_class_database_1a6d9af6ef44b1548450e4200d0a05cabe">database</link>);
+18 &#32;&#32;&#32;&#32;<link linkend="_class_database_1a84d399a2ad58d69daab9b05330e1316d">~Database</link>();
+19 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">bool</emphasis>&#32;<link linkend="_class_database_1a7c8d83dd74fe50ae3c261479235c702a">init</link>();
+20 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">bool</emphasis>&#32;<link linkend="_class_database_1aa73016d999efff4ebff6c7f82651909c">schrijven</link>(<emphasis role="keyword">const</emphasis>&#32;std::string&amp;&#32;card_uid,&#32;<emphasis role="keyword">const</emphasis>&#32;std::string&amp;&#32;device_id);
+21 
+22 };
+23 <emphasis role="preprocessor">#endif</emphasis>
+</programlisting></section>

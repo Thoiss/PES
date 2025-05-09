@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="_class_database" xml:lang="en-US">
+<title>Database Class Reference</title>
+<indexterm><primary>Database</primary></indexterm>
+<para>
+<computeroutput>#include &lt;Database.h&gt;</computeroutput>
+</para>
+<simplesect>
+    <title>Public Member Functions    </title>
+        <itemizedlist>
+            <listitem><para><link linkend="_class_database_1a353d18e4ab77fcce1a0e8fa624ffb38a">Database</link> (const std::string &amp;<link linkend="_class_database_1a463d42c49c2c5aaa6727839f73fb204f">server</link>, const std::string &amp;<link linkend="_class_database_1a378941bcf1ce83ad76f45cb96f64aeb0">user</link>, const std::string &amp;<link linkend="_class_database_1a21e2314ee4e60283f59afe330a552e50">password</link>, const std::string &amp;<link linkend="_class_database_1a6d9af6ef44b1548450e4200d0a05cabe">database</link>)</para>
+</listitem>
+            <listitem><para><link linkend="_class_database_1a84d399a2ad58d69daab9b05330e1316d">~Database</link> ()</para>
+</listitem>
+            <listitem><para>bool <link linkend="_class_database_1a7c8d83dd74fe50ae3c261479235c702a">init</link> ()</para>
+</listitem>
+            <listitem><para>bool <link linkend="_class_database_1aa73016d999efff4ebff6c7f82651909c">schrijven</link> (const std::string &amp;card_uid, const std::string &amp;device_id)</para>
+</listitem>
+        </itemizedlist>
+</simplesect>
+<simplesect>
+    <title>Private Attributes    </title>
+        <itemizedlist>
+            <listitem><para>MYSQL * <link linkend="_class_database_1ab90148100b13edf67d3bf255c98e058c">conn</link></para>
+</listitem>
+            <listitem><para>std::string <link linkend="_class_database_1a463d42c49c2c5aaa6727839f73fb204f">server</link></para>
+</listitem>
+            <listitem><para>std::string <link linkend="_class_database_1a378941bcf1ce83ad76f45cb96f64aeb0">user</link></para>
+</listitem>
+            <listitem><para>std::string <link linkend="_class_database_1a21e2314ee4e60283f59afe330a552e50">password</link></para>
+</listitem>
+            <listitem><para>std::string <link linkend="_class_database_1a6d9af6ef44b1548450e4200d0a05cabe">database</link></para>
+</listitem>
+        </itemizedlist>
+</simplesect>
+<section>
+<title>Constructor &amp; Destructor Documentation</title>
+<anchor xml:id="_class_database_1a353d18e4ab77fcce1a0e8fa624ffb38a"/><section>
+    <title>Database()</title>
+<indexterm><primary>Database</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>Database</secondary></indexterm>
+<para><computeroutput>Database::Database (const std::string &amp; server, const std::string &amp; user, const std::string &amp; password, const std::string &amp; database)</computeroutput></para></section>
+<anchor xml:id="_class_database_1a84d399a2ad58d69daab9b05330e1316d"/><section>
+    <title>~Database()</title>
+<indexterm><primary>~Database</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>~Database</secondary></indexterm>
+<para><computeroutput>Database::~Database ( )</computeroutput></para></section>
+</section>
+<section>
+<title>Member Function Documentation</title>
+<anchor xml:id="_class_database_1a7c8d83dd74fe50ae3c261479235c702a"/><section>
+    <title>init()</title>
+<indexterm><primary>init</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>init</secondary></indexterm>
+<para><computeroutput>bool Database::init ( )</computeroutput></para></section>
+<anchor xml:id="_class_database_1aa73016d999efff4ebff6c7f82651909c"/><section>
+    <title>schrijven()</title>
+<indexterm><primary>schrijven</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>schrijven</secondary></indexterm>
+<para><computeroutput>bool Database::schrijven (const std::string &amp; card_uid, const std::string &amp; device_id)</computeroutput></para></section>
+</section>
+<section>
+<title>Member Data Documentation</title>
+<anchor xml:id="_class_database_1ab90148100b13edf67d3bf255c98e058c"/><section>
+    <title>conn</title>
+<indexterm><primary>conn</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>conn</secondary></indexterm>
+<para><computeroutput>MYSQL* Database::conn<computeroutput>[private]</computeroutput></computeroutput></para></section>
+<anchor xml:id="_class_database_1a6d9af6ef44b1548450e4200d0a05cabe"/><section>
+    <title>database</title>
+<indexterm><primary>database</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>database</secondary></indexterm>
+<para><computeroutput>std::string Database::database<computeroutput>[private]</computeroutput></computeroutput></para></section>
+<anchor xml:id="_class_database_1a21e2314ee4e60283f59afe330a552e50"/><section>
+    <title>password</title>
+<indexterm><primary>password</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>password</secondary></indexterm>
+<para><computeroutput>std::string Database::password<computeroutput>[private]</computeroutput></computeroutput></para></section>
+<anchor xml:id="_class_database_1a463d42c49c2c5aaa6727839f73fb204f"/><section>
+    <title>server</title>
+<indexterm><primary>server</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>server</secondary></indexterm>
+<para><computeroutput>std::string Database::server<computeroutput>[private]</computeroutput></computeroutput></para></section>
+<anchor xml:id="_class_database_1a378941bcf1ce83ad76f45cb96f64aeb0"/><section>
+    <title>user</title>
+<indexterm><primary>user</primary><secondary>Database</secondary></indexterm>
+<indexterm><primary>Database</primary><secondary>user</secondary></indexterm>
+<para><computeroutput>std::string Database::user<computeroutput>[private]</computeroutput></computeroutput></para></section>
+<para>
+The documentation for this class was generated from the following files:</para>
+<link linkend="__database_8h">Database.h</link><link linkend="__database_8cpp">Database.cpp</link></section>
+</section>

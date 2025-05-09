@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="__database_8cpp" xml:lang="en-US">
+<title>Database.cpp File Reference</title>
+<indexterm><primary>Database.cpp</primary></indexterm>
+<programlisting linenumbering="unnumbered">#include &quot;Database.h&quot;<?linebreak?>#include &lt;iostream&gt;<?linebreak?>#include &lt;cstdio&gt;<?linebreak?></programlisting>Include dependency graph for Database.cpp:<para>
+    <informalfigure>
+        <mediaobject>
+            <imageobject>
+                <imagedata width="50%" align="center" valign="middle" scalefit="0" fileref="_database_8cpp__incl.png"></imagedata>
+            </imageobject>
+        </mediaobject>
+    </informalfigure>
+</para>
+</section>

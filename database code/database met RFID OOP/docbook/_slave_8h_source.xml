@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<section xmlns="http://docbook.org/ns/docbook" version="5.0" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="__slave_8h_source" xml:lang="en-US">
+<title>Slave.h</title>
+Go to the documentation of this file.<programlisting linenumbering="unnumbered">1 <emphasis role="preprocessor">#ifndef&#32;SLAVE_H</emphasis>
+2 <emphasis role="preprocessor">#define&#32;SLAVE_H</emphasis>
+3 
+4 <emphasis role="keyword">class&#32;</emphasis><link linkend="_class_slave_1adbffde00ac3ed744c32a3d9ecef8fe88">Slave</link>&#32;{
+5 <emphasis role="keyword">private</emphasis>:
+6 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">int</emphasis>&#32;<link linkend="_class_slave_1a49fb04de7252645246a0d3388091b7d0">fd</link>;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis role="comment">//&#32;File&#32;descriptor&#32;voor&#32;de&#32;I2C&#32;verbinding</emphasis>
+7 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">int</emphasis>&#32;<link linkend="_class_slave_1a4d75bc5c08481ccb3903eb86fb0b0a9f">address</link>;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;<emphasis role="comment">//&#32;I2C&#32;adres&#32;van&#32;de&#32;slave</emphasis>
+8 
+9 <emphasis role="keyword">public</emphasis>:
+10 &#32;&#32;&#32;&#32;<link linkend="_class_slave_1adbffde00ac3ed744c32a3d9ecef8fe88">Slave</link>(<emphasis role="keywordtype">int</emphasis>&#32;<link linkend="_class_slave_1a4d75bc5c08481ccb3903eb86fb0b0a9f">address</link>);
+11 
+12 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">bool</emphasis>&#32;<link linkend="_class_slave_1a5d5007aa3e0642b2072613e375b6d44d">init</link>();
+13 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">int</emphasis>&#32;<link linkend="_class_slave_1af2d7fd1ec78fb54fff7dbe83b3e4c205">leesKaart</link>();
+14 &#32;&#32;&#32;&#32;<emphasis role="keywordtype">void</emphasis>&#32;<link linkend="_class_slave_1a7effa79f265913b96f93bb8b8546be7b">schrijfCommando</link>(<emphasis role="keywordtype">int</emphasis>&#32;commando);
+15 };
+16 
+17 <emphasis role="preprocessor">#endif</emphasis>
+</programlisting></section>
