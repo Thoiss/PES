@@ -7,7 +7,7 @@
 void setup() {
 
   I2Csetup(SLAVE_ADDRESS);     //I2c verbinding initialiseren met de SDA op BP7 en de SCL op PB6, met als adres 0x11
-  led_Setup();              //de knop initialiseren
+  led_Setup();              //de ledpin op output zetten
   Wire.onReceive(led_Aansturen);    // Functie voor ontvangen data van de master
 }
 
