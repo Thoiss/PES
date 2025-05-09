@@ -51,7 +51,9 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+int pasID = 0;
 uint8_t RX_Buffer [1] ;
+char buffer[20];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,8 +107,8 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   MFRC522_Init();
-  HAL_I2C_Slave_Receive_IT(&hi2c1 ,(uint8_t *)RX_Buffer, 1); //Receiving in Interrupt mode
-  HAL_Delay(100);
+  HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);  // Zet de slave in ontvangstmodus
+ // HAL_I2C_Slave_Transmit_IT(&hi2c1 ,(uint8_t *)RX_Buffer, 1); //Receiving in Interrupt mode
 
 
   /* USER CODE END 2 */
@@ -118,7 +120,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  scanPas();
+	  pasID = scanPas();
+	  HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
@@ -363,15 +366,21 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
     if (hi2c->Instance == I2C1)  // check of het de juiste I2C is
     {
         // Verstuur ontvangen byte via UART
-        HAL_UART_Transmit(&huart2, "ik heb iets ontvangen", 1, HAL_MAX_DELAY);
+    	char buffer[20];
+    	sprintf(buffer, "%d\r\n", pasID);
+        HAL_UART_Transmit(&huart2, buffer, 3, HAL_MAX_DELAY);
+       char newline = '\n';
+       HAL_UART_Transmit(&huart2, (uint8_t*)&newline, 1, HAL_MAX_DELAY);
+       HAL_I2C_Slave_Transmit(&hi2c1, buffer, 1, 1000);
 
         // Start opnieuw met ontvangen voor de volgende byte
-        HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
+       HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
     }
 }
 /* USER CODE END 4 */
