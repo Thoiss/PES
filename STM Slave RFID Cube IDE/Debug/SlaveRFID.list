@@ -39,13 +39,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  17 .debug_line   000140b1  00000000  00000000  0003e1cb  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000c4d25  00000000  00000000  0005227c  2**0
+ 18 .debug_str    000c4d67  00000000  00000000  0005227c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  00116fa1  2**0
+ 19 .comment      00000043  00000000  00000000  00116fe3  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00004524  00000000  00000000  00116fe4  2**2
+ 20 .debug_frame  00004524  00000000  00000000  00117028  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000096  00000000  00000000  0011b508  2**0
+ 21 .debug_line_str 00000096  00000000  00000000  0011b54c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -405,19 +405,11 @@ Disassembly of section .text:
  800055e:	bf00      	nop
 
 08000560 <RC522_SPI_Transfer>:
- * Description: A common function used by Write_MFRC522 and Read_MFRC522
- * Input Parameters: data - the value to be written
- * Returns: a byte of data read from the module
- */
-uint8_t RC522_SPI_Transfer(uchar data)
-{
  8000560:	b580      	push	{r7, lr}
  8000562:	b086      	sub	sp, #24
  8000564:	af02      	add	r7, sp, #8
  8000566:	4603      	mov	r3, r0
  8000568:	71fb      	strb	r3, [r7, #7]
-	uchar rx_data;
-	HAL_SPI_TransmitReceive(HSPI_INSTANCE,&data,&rx_data,1,100);
  800056a:	f107 020f 	add.w	r2, r7, #15
  800056e:	1df9      	adds	r1, r7, #7
  8000570:	2364      	movs	r3, #100	@ 0x64
@@ -425,10 +417,7 @@ uint8_t RC522_SPI_Transfer(uchar data)
  8000574:	2301      	movs	r3, #1
  8000576:	4804      	ldr	r0, [pc, #16]	@ (8000588 <RC522_SPI_Transfer+0x28>)
  8000578:	f004 fd01 	bl	8004f7e <HAL_SPI_TransmitReceive>
-
-	return rx_data;
  800057c:	7bfb      	ldrb	r3, [r7, #15]
-}
  800057e:	4618      	mov	r0, r3
  8000580:	3710      	adds	r7, #16
  8000582:	46bd      	mov	sp, r7
@@ -437,12 +426,6 @@ uint8_t RC522_SPI_Transfer(uchar data)
  8000588:	20000130 	.word	0x20000130
 
 0800058c <Write_MFRC522>:
- * Function Description: To a certain MFRC522 register to write a byte of data
- * Input Parameters: addr - register address; val - the value to be written
- * Return value: None
- */
-void Write_MFRC522(uchar addr, uchar val)
-{
  800058c:	b580      	push	{r7, lr}
  800058e:	b082      	sub	sp, #8
  8000590:	af00      	add	r7, sp, #0
@@ -451,18 +434,10 @@ void Write_MFRC522(uchar addr, uchar val)
  8000596:	71fb      	strb	r3, [r7, #7]
  8000598:	4613      	mov	r3, r2
  800059a:	71bb      	strb	r3, [r7, #6]
-	/* CS LOW */
-	HAL_GPIO_WritePin(MFRC522_CS_PORT,MFRC522_CS_PIN,GPIO_PIN_RESET);
  800059c:	2200      	movs	r2, #0
  800059e:	2110      	movs	r1, #16
  80005a0:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  80005a4:	f001 fb0e 	bl	8001bc4 <HAL_GPIO_WritePin>
-	  // two 8-bit frames smooshed together-- sending two 8 bit frames back to back
-	  // results in a spike in the select line which will jack with transactions
-	  // - top 8 bits are the address. Per the spec, we shift the address left
-	  //   1 bit, clear the LSb, and clear the MSb to indicate a write
-	  // - bottom 8 bits are the data bits being sent for that address, we send them
-	RC522_SPI_Transfer((addr<<1)&0x7E);
  80005a8:	79fb      	ldrb	r3, [r7, #7]
  80005aa:	005b      	lsls	r3, r3, #1
  80005ac:	b2db      	uxtb	r3, r3
@@ -470,49 +445,28 @@ void Write_MFRC522(uchar addr, uchar val)
  80005b2:	b2db      	uxtb	r3, r3
  80005b4:	4618      	mov	r0, r3
  80005b6:	f7ff ffd3 	bl	8000560 <RC522_SPI_Transfer>
-	RC522_SPI_Transfer(val);
  80005ba:	79bb      	ldrb	r3, [r7, #6]
  80005bc:	4618      	mov	r0, r3
  80005be:	f7ff ffcf 	bl	8000560 <RC522_SPI_Transfer>
-
-	/* CS HIGH */
-	HAL_GPIO_WritePin(MFRC522_CS_PORT,MFRC522_CS_PIN,GPIO_PIN_SET);
  80005c2:	2201      	movs	r2, #1
  80005c4:	2110      	movs	r1, #16
  80005c6:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  80005ca:	f001 fafb 	bl	8001bc4 <HAL_GPIO_WritePin>
-}
  80005ce:	bf00      	nop
  80005d0:	3708      	adds	r7, #8
  80005d2:	46bd      	mov	sp, r7
  80005d4:	bd80      	pop	{r7, pc}
 
 080005d6 <Read_MFRC522>:
- * Description: From a certain MFRC522 read a byte of data register
- * Input Parameters: addr - register address
- * Returns: a byte of data read from the module
- */
-uchar Read_MFRC522(uchar addr)
-{
  80005d6:	b580      	push	{r7, lr}
  80005d8:	b084      	sub	sp, #16
  80005da:	af00      	add	r7, sp, #0
  80005dc:	4603      	mov	r3, r0
  80005de:	71fb      	strb	r3, [r7, #7]
-	uchar val;
-
-	/* CS LOW */
-	HAL_GPIO_WritePin(MFRC522_CS_PORT,MFRC522_CS_PIN,GPIO_PIN_RESET);
  80005e0:	2200      	movs	r2, #0
  80005e2:	2110      	movs	r1, #16
  80005e4:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  80005e8:	f001 faec 	bl	8001bc4 <HAL_GPIO_WritePin>
-	  // two 8-bit frames smooshed together-- sending two 8 bit frames back to back
-	  // results in a spike in the select line which will jack with transactions
-	  // - top 8 bits are the address. Per the spec, we shift the address left
-	  //   1 bit, clear the LSb, and set the MSb to indicate a read
-	  // - bottom 8 bits are all 0s on a read per 8.1.2.1 Table 6
-	RC522_SPI_Transfer(((addr<<1)&0x7E) | 0x80);
  80005ec:	79fb      	ldrb	r3, [r7, #7]
  80005ee:	005b      	lsls	r3, r3, #1
  80005f0:	b25b      	sxtb	r3, r3
@@ -523,35 +477,21 @@ uchar Read_MFRC522(uchar addr)
  80005fe:	b2db      	uxtb	r3, r3
  8000600:	4618      	mov	r0, r3
  8000602:	f7ff ffad 	bl	8000560 <RC522_SPI_Transfer>
-	val = RC522_SPI_Transfer(0x00);
  8000606:	2000      	movs	r0, #0
  8000608:	f7ff ffaa 	bl	8000560 <RC522_SPI_Transfer>
  800060c:	4603      	mov	r3, r0
  800060e:	73fb      	strb	r3, [r7, #15]
-
-	/* CS HIGH */
-	HAL_GPIO_WritePin(MFRC522_CS_PORT,MFRC522_CS_PIN,GPIO_PIN_SET);
  8000610:	2201      	movs	r2, #1
  8000612:	2110      	movs	r1, #16
  8000614:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  8000618:	f001 fad4 	bl	8001bc4 <HAL_GPIO_WritePin>
-
-	return val;
  800061c:	7bfb      	ldrb	r3, [r7, #15]
-
-}
  800061e:	4618      	mov	r0, r3
  8000620:	3710      	adds	r7, #16
  8000622:	46bd      	mov	sp, r7
  8000624:	bd80      	pop	{r7, pc}
 
 08000626 <SetBitMask>:
- * Description: Set RC522 register bit
- * Input parameters: reg - register address; mask - set value
- * Return value: None
- */
-void SetBitMask(uchar reg, uchar mask)
-{
  8000626:	b580      	push	{r7, lr}
  8000628:	b084      	sub	sp, #16
  800062a:	af00      	add	r7, sp, #0
@@ -560,14 +500,11 @@ void SetBitMask(uchar reg, uchar mask)
  8000630:	71fb      	strb	r3, [r7, #7]
  8000632:	4613      	mov	r3, r2
  8000634:	71bb      	strb	r3, [r7, #6]
-    uchar tmp;
-    tmp = Read_MFRC522(reg);
  8000636:	79fb      	ldrb	r3, [r7, #7]
  8000638:	4618      	mov	r0, r3
  800063a:	f7ff ffcc 	bl	80005d6 <Read_MFRC522>
  800063e:	4603      	mov	r3, r0
  8000640:	73fb      	strb	r3, [r7, #15]
-    Write_MFRC522(reg, tmp | mask);  // set bit mask
  8000642:	7bfa      	ldrb	r2, [r7, #15]
  8000644:	79bb      	ldrb	r3, [r7, #6]
  8000646:	4313      	orrs	r3, r2
@@ -576,19 +513,12 @@ void SetBitMask(uchar reg, uchar mask)
  800064c:	4611      	mov	r1, r2
  800064e:	4618      	mov	r0, r3
  8000650:	f7ff ff9c 	bl	800058c <Write_MFRC522>
-}
  8000654:	bf00      	nop
  8000656:	3710      	adds	r7, #16
  8000658:	46bd      	mov	sp, r7
  800065a:	bd80      	pop	{r7, pc}
 
 0800065c <ClearBitMask>:
- * Description: clear RC522 register bit
- * Input parameters: reg - register address; mask - clear bit value
- * Return value: None
-*/
-void ClearBitMask(uchar reg, uchar mask)
-{
  800065c:	b580      	push	{r7, lr}
  800065e:	b084      	sub	sp, #16
  8000660:	af00      	add	r7, sp, #0
@@ -597,14 +527,11 @@ void ClearBitMask(uchar reg, uchar mask)
  8000666:	71fb      	strb	r3, [r7, #7]
  8000668:	4613      	mov	r3, r2
  800066a:	71bb      	strb	r3, [r7, #6]
-    uchar tmp;
-    tmp = Read_MFRC522(reg);
  800066c:	79fb      	ldrb	r3, [r7, #7]
  800066e:	4618      	mov	r0, r3
  8000670:	f7ff ffb1 	bl	80005d6 <Read_MFRC522>
  8000674:	4603      	mov	r3, r0
  8000676:	73fb      	strb	r3, [r7, #15]
-    Write_MFRC522(reg, tmp & (~mask));  // clear bit mask
  8000678:	f997 3006 	ldrsb.w	r3, [r7, #6]
  800067c:	43db      	mvns	r3, r3
  800067e:	b25a      	sxtb	r2, r3
@@ -616,115 +543,69 @@ void ClearBitMask(uchar reg, uchar mask)
  800068c:	4611      	mov	r1, r2
  800068e:	4618      	mov	r0, r3
  8000690:	f7ff ff7c 	bl	800058c <Write_MFRC522>
-}
  8000694:	bf00      	nop
  8000696:	3710      	adds	r7, #16
  8000698:	46bd      	mov	sp, r7
  800069a:	bd80      	pop	{r7, pc}
 
 0800069c <AntennaOn>:
- * Description: Open antennas, each time you start or shut down the natural barrier between the transmitter should be at least 1ms interval
- * Input: None
- * Return value: None
- */
-void AntennaOn(void)
-{
  800069c:	b580      	push	{r7, lr}
  800069e:	af00      	add	r7, sp, #0
-
-	Read_MFRC522(TxControlReg);
  80006a0:	2014      	movs	r0, #20
  80006a2:	f7ff ff98 	bl	80005d6 <Read_MFRC522>
-	SetBitMask(TxControlReg, 0x03);
  80006a6:	2103      	movs	r1, #3
  80006a8:	2014      	movs	r0, #20
  80006aa:	f7ff ffbc 	bl	8000626 <SetBitMask>
-}
  80006ae:	bf00      	nop
  80006b0:	bd80      	pop	{r7, pc}
 
 080006b2 <MFRC522_Reset>:
- * Description: Reset RC522
- * Input: None
- * Return value: None
- */
-void MFRC522_Reset(void)
-{
  80006b2:	b580      	push	{r7, lr}
  80006b4:	af00      	add	r7, sp, #0
-    Write_MFRC522(CommandReg, PCD_RESETPHASE);
  80006b6:	210f      	movs	r1, #15
  80006b8:	2001      	movs	r0, #1
  80006ba:	f7ff ff67 	bl	800058c <Write_MFRC522>
-}
  80006be:	bf00      	nop
  80006c0:	bd80      	pop	{r7, pc}
 	...
 
 080006c4 <MFRC522_Init>:
- * Description: Initialize RC522
- * Input: None
- * Return value: None
-*/
-void MFRC522_Init(void)
-{
  80006c4:	b580      	push	{r7, lr}
  80006c6:	af00      	add	r7, sp, #0
-	HAL_GPIO_WritePin(MFRC522_CS_PORT,MFRC522_CS_PIN,GPIO_PIN_SET);
  80006c8:	2201      	movs	r2, #1
  80006ca:	2110      	movs	r1, #16
  80006cc:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  80006d0:	f001 fa78 	bl	8001bc4 <HAL_GPIO_WritePin>
-	HAL_GPIO_WritePin(MFRC522_RST_PORT,MFRC522_RST_PIN,GPIO_PIN_SET);
  80006d4:	2201      	movs	r2, #1
  80006d6:	2101      	movs	r1, #1
  80006d8:	4810      	ldr	r0, [pc, #64]	@ (800071c <MFRC522_Init+0x58>)
  80006da:	f001 fa73 	bl	8001bc4 <HAL_GPIO_WritePin>
-	MFRC522_Reset();
  80006de:	f7ff ffe8 	bl	80006b2 <MFRC522_Reset>
-
-	//Timer: TPrescaler*TreloadVal/6.78MHz = 24ms
-	Write_MFRC522(TModeReg, 0x8D);		//Tauto=1; f(Timer) = 6.78MHz/TPreScaler
  80006e2:	218d      	movs	r1, #141	@ 0x8d
  80006e4:	202a      	movs	r0, #42	@ 0x2a
  80006e6:	f7ff ff51 	bl	800058c <Write_MFRC522>
-	Write_MFRC522(TPrescalerReg, 0x3E);	//TModeReg[3..0] + TPrescalerReg
  80006ea:	213e      	movs	r1, #62	@ 0x3e
  80006ec:	202b      	movs	r0, #43	@ 0x2b
  80006ee:	f7ff ff4d 	bl	800058c <Write_MFRC522>
-	Write_MFRC522(TReloadRegL, 30);
  80006f2:	211e      	movs	r1, #30
  80006f4:	202d      	movs	r0, #45	@ 0x2d
  80006f6:	f7ff ff49 	bl	800058c <Write_MFRC522>
-	Write_MFRC522(TReloadRegH, 0);
  80006fa:	2100      	movs	r1, #0
  80006fc:	202c      	movs	r0, #44	@ 0x2c
  80006fe:	f7ff ff45 	bl	800058c <Write_MFRC522>
-
-	Write_MFRC522(TxAutoReg, 0x40);		// force 100% ASK modulation
  8000702:	2140      	movs	r1, #64	@ 0x40
  8000704:	2015      	movs	r0, #21
  8000706:	f7ff ff41 	bl	800058c <Write_MFRC522>
-	Write_MFRC522(ModeReg, 0x3D);		// CRC Initial value 0x6363
  800070a:	213d      	movs	r1, #61	@ 0x3d
  800070c:	2011      	movs	r0, #17
  800070e:	f7ff ff3d 	bl	800058c <Write_MFRC522>
-
-	AntennaOn();
  8000712:	f7ff ffc3 	bl	800069c <AntennaOn>
-}
  8000716:	bf00      	nop
  8000718:	bd80      	pop	{r7, pc}
  800071a:	bf00      	nop
  800071c:	48000400 	.word	0x48000400
 
 08000720 <MFRC522_ToCard>:
- *			 backData--Received the card returns data,
- *			 backLen--Return data bit length
- * Return value: the successful return MI_OK
- */
-uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backData, uint *backLen)
-{
  8000720:	b590      	push	{r4, r7, lr}
  8000722:	b089      	sub	sp, #36	@ 0x24
  8000724:	af00      	add	r7, sp, #0
@@ -734,81 +615,46 @@ uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backD
  800072c:	73fb      	strb	r3, [r7, #15]
  800072e:	4613      	mov	r3, r2
  8000730:	73bb      	strb	r3, [r7, #14]
-    uchar status = MI_ERR;
  8000732:	2302      	movs	r3, #2
  8000734:	77fb      	strb	r3, [r7, #31]
-    uchar irqEn = 0x00;
  8000736:	2300      	movs	r3, #0
  8000738:	77bb      	strb	r3, [r7, #30]
-    uchar waitIRq = 0x00;
  800073a:	2300      	movs	r3, #0
  800073c:	777b      	strb	r3, [r7, #29]
-    uchar lastBits;
-    uchar n;
-    uint i;
-
-    switch (command)
  800073e:	7bfb      	ldrb	r3, [r7, #15]
  8000740:	2b0c      	cmp	r3, #12
  8000742:	d006      	beq.n	8000752 <MFRC522_ToCard+0x32>
  8000744:	2b0e      	cmp	r3, #14
  8000746:	d109      	bne.n	800075c <MFRC522_ToCard+0x3c>
-    {
-        case PCD_AUTHENT:		// Certification cards close
-		{
-			irqEn = 0x12;
  8000748:	2312      	movs	r3, #18
  800074a:	77bb      	strb	r3, [r7, #30]
-			waitIRq = 0x10;
  800074c:	2310      	movs	r3, #16
  800074e:	777b      	strb	r3, [r7, #29]
-			break;
  8000750:	e005      	b.n	800075e <MFRC522_ToCard+0x3e>
-		}
-		case PCD_TRANSCEIVE:	// Transmit FIFO data
-		{
-			irqEn = 0x77;
  8000752:	2377      	movs	r3, #119	@ 0x77
  8000754:	77bb      	strb	r3, [r7, #30]
-			waitIRq = 0x30;
  8000756:	2330      	movs	r3, #48	@ 0x30
  8000758:	777b      	strb	r3, [r7, #29]
-			break;
  800075a:	e000      	b.n	800075e <MFRC522_ToCard+0x3e>
-		}
-		default:
-			break;
  800075c:	bf00      	nop
-    }
-
-    Write_MFRC522(CommIEnReg, irqEn|0x80);	// Interrupt request
  800075e:	7fbb      	ldrb	r3, [r7, #30]
  8000760:	f063 037f 	orn	r3, r3, #127	@ 0x7f
  8000764:	b2db      	uxtb	r3, r3
  8000766:	4619      	mov	r1, r3
  8000768:	2002      	movs	r0, #2
  800076a:	f7ff ff0f 	bl	800058c <Write_MFRC522>
-    ClearBitMask(CommIrqReg, 0x80);			// Clear all interrupt request bit
  800076e:	2180      	movs	r1, #128	@ 0x80
  8000770:	2004      	movs	r0, #4
  8000772:	f7ff ff73 	bl	800065c <ClearBitMask>
-    SetBitMask(FIFOLevelReg, 0x80);			// FlushBuffer=1, FIFO Initialization
  8000776:	2180      	movs	r1, #128	@ 0x80
  8000778:	200a      	movs	r0, #10
  800077a:	f7ff ff54 	bl	8000626 <SetBitMask>
-
-	Write_MFRC522(CommandReg, PCD_IDLE);	// NO action; Cancel the current command
  800077e:	2100      	movs	r1, #0
  8000780:	2001      	movs	r0, #1
  8000782:	f7ff ff03 	bl	800058c <Write_MFRC522>
-
-	// Writing data to the FIFO
-    for (i=0; i<sendLen; i++)
  8000786:	2300      	movs	r3, #0
  8000788:	61bb      	str	r3, [r7, #24]
  800078a:	e00a      	b.n	80007a2 <MFRC522_ToCard+0x82>
-    {
-		Write_MFRC522(FIFODataReg, sendData[i]);
  800078c:	68ba      	ldr	r2, [r7, #8]
  800078e:	69bb      	ldr	r3, [r7, #24]
  8000790:	4413      	add	r3, r2
@@ -816,7 +662,6 @@ uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backD
  8000794:	4619      	mov	r1, r3
  8000796:	2009      	movs	r0, #9
  8000798:	f7ff fef8 	bl	800058c <Write_MFRC522>
-    for (i=0; i<sendLen; i++)
  800079c:	69bb      	ldr	r3, [r7, #24]
  800079e:	3301      	adds	r3, #1
  80007a0:	61bb      	str	r3, [r7, #24]
@@ -824,44 +669,25 @@ uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backD
  80007a4:	69ba      	ldr	r2, [r7, #24]
  80007a6:	429a      	cmp	r2, r3
  80007a8:	d3f0      	bcc.n	800078c <MFRC522_ToCard+0x6c>
-	}
-
-    // Execute the command
-	Write_MFRC522(CommandReg, command);
  80007aa:	7bfb      	ldrb	r3, [r7, #15]
  80007ac:	4619      	mov	r1, r3
  80007ae:	2001      	movs	r0, #1
  80007b0:	f7ff feec 	bl	800058c <Write_MFRC522>
-    if (command == PCD_TRANSCEIVE)
  80007b4:	7bfb      	ldrb	r3, [r7, #15]
  80007b6:	2b0c      	cmp	r3, #12
  80007b8:	d103      	bne.n	80007c2 <MFRC522_ToCard+0xa2>
-    {
-		SetBitMask(BitFramingReg, 0x80);		// StartSend=1,transmission of data starts
  80007ba:	2180      	movs	r1, #128	@ 0x80
  80007bc:	200d      	movs	r0, #13
  80007be:	f7ff ff32 	bl	8000626 <SetBitMask>
-	}
-
-    // Waiting to receive data to complete
-	i = 2000;	// i according to the clock frequency adjustment, the operator M1 card maximum waiting time 25ms
  80007c2:	f44f 63fa 	mov.w	r3, #2000	@ 0x7d0
  80007c6:	61bb      	str	r3, [r7, #24]
-    do
-    {
-		//CommIrqReg[7..0]
-		//Set1 TxIRq RxIRq IdleIRq HiAlerIRq LoAlertIRq ErrIRq TimerIRq
-        n = Read_MFRC522(CommIrqReg);
  80007c8:	2004      	movs	r0, #4
  80007ca:	f7ff ff04 	bl	80005d6 <Read_MFRC522>
  80007ce:	4603      	mov	r3, r0
  80007d0:	773b      	strb	r3, [r7, #28]
-        i--;
  80007d2:	69bb      	ldr	r3, [r7, #24]
  80007d4:	3b01      	subs	r3, #1
  80007d6:	61bb      	str	r3, [r7, #24]
-    }
-    while ((i!=0) && !(n&0x01) && !(n&waitIRq));
  80007d8:	69bb      	ldr	r3, [r7, #24]
  80007da:	2b00      	cmp	r3, #0
  80007dc:	d00a      	beq.n	80007f4 <MFRC522_ToCard+0xd4>
@@ -875,29 +701,20 @@ uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backD
  80007ee:	b2db      	uxtb	r3, r3
  80007f0:	2b00      	cmp	r3, #0
  80007f2:	d0e9      	beq.n	80007c8 <MFRC522_ToCard+0xa8>
-
-    ClearBitMask(BitFramingReg, 0x80);			//StartSend=0
  80007f4:	2180      	movs	r1, #128	@ 0x80
  80007f6:	200d      	movs	r0, #13
  80007f8:	f7ff ff30 	bl	800065c <ClearBitMask>
-
-    if (i != 0)
  80007fc:	69bb      	ldr	r3, [r7, #24]
  80007fe:	2b00      	cmp	r3, #0
  8000800:	d052      	beq.n	80008a8 <MFRC522_ToCard+0x188>
-    {
-        if(!(Read_MFRC522(ErrorReg) & 0x1B))	//BufferOvfl Collerr CRCErr ProtecolErr
  8000802:	2006      	movs	r0, #6
  8000804:	f7ff fee7 	bl	80005d6 <Read_MFRC522>
  8000808:	4603      	mov	r3, r0
  800080a:	f003 031b 	and.w	r3, r3, #27
  800080e:	2b00      	cmp	r3, #0
  8000810:	d148      	bne.n	80008a4 <MFRC522_ToCard+0x184>
-        {
-            status = MI_OK;
  8000812:	2300      	movs	r3, #0
  8000814:	77fb      	strb	r3, [r7, #31]
-            if (n & irqEn & 0x01)
  8000816:	7f3a      	ldrb	r2, [r7, #28]
  8000818:	7fbb      	ldrb	r3, [r7, #30]
  800081a:	4013      	ands	r3, r2
@@ -905,34 +722,23 @@ uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backD
  800081e:	f003 0301 	and.w	r3, r3, #1
  8000822:	2b00      	cmp	r3, #0
  8000824:	d001      	beq.n	800082a <MFRC522_ToCard+0x10a>
-            {
-				status = MI_NOTAGERR;
  8000826:	2301      	movs	r3, #1
  8000828:	77fb      	strb	r3, [r7, #31]
-			}
-
-            if (command == PCD_TRANSCEIVE)
  800082a:	7bfb      	ldrb	r3, [r7, #15]
  800082c:	2b0c      	cmp	r3, #12
  800082e:	d13b      	bne.n	80008a8 <MFRC522_ToCard+0x188>
-            {
-               	n = Read_MFRC522(FIFOLevelReg);
  8000830:	200a      	movs	r0, #10
  8000832:	f7ff fed0 	bl	80005d6 <Read_MFRC522>
  8000836:	4603      	mov	r3, r0
  8000838:	773b      	strb	r3, [r7, #28]
-              	lastBits = Read_MFRC522(ControlReg) & 0x07;
  800083a:	200c      	movs	r0, #12
  800083c:	f7ff fecb 	bl	80005d6 <Read_MFRC522>
  8000840:	4603      	mov	r3, r0
  8000842:	f003 0307 	and.w	r3, r3, #7
  8000846:	75fb      	strb	r3, [r7, #23]
-                if (lastBits)
  8000848:	7dfb      	ldrb	r3, [r7, #23]
  800084a:	2b00      	cmp	r3, #0
  800084c:	d008      	beq.n	8000860 <MFRC522_ToCard+0x140>
-                {
-					*backLen = (n-1)*8 + lastBits;
  800084e:	7f3b      	ldrb	r3, [r7, #28]
  8000850:	3b01      	subs	r3, #1
  8000852:	00da      	lsls	r2, r3, #3
@@ -942,43 +748,24 @@ uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backD
  800085a:	6b3b      	ldr	r3, [r7, #48]	@ 0x30
  800085c:	601a      	str	r2, [r3, #0]
  800085e:	e004      	b.n	800086a <MFRC522_ToCard+0x14a>
-				}
-                else
-                {
-					*backLen = n*8;
  8000860:	7f3b      	ldrb	r3, [r7, #28]
  8000862:	00db      	lsls	r3, r3, #3
  8000864:	461a      	mov	r2, r3
  8000866:	6b3b      	ldr	r3, [r7, #48]	@ 0x30
  8000868:	601a      	str	r2, [r3, #0]
-				}
-
-                if (n == 0)
  800086a:	7f3b      	ldrb	r3, [r7, #28]
  800086c:	2b00      	cmp	r3, #0
  800086e:	d101      	bne.n	8000874 <MFRC522_ToCard+0x154>
-                {
-					n = 1;
  8000870:	2301      	movs	r3, #1
  8000872:	773b      	strb	r3, [r7, #28]
-				}
-                if (n > MAX_LEN)
  8000874:	7f3b      	ldrb	r3, [r7, #28]
  8000876:	2b10      	cmp	r3, #16
  8000878:	d901      	bls.n	800087e <MFRC522_ToCard+0x15e>
-                {
-					n = MAX_LEN;
  800087a:	2310      	movs	r3, #16
  800087c:	773b      	strb	r3, [r7, #28]
-				}
-
-                // Reading the received data in FIFO
-                for (i=0; i<n; i++)
  800087e:	2300      	movs	r3, #0
  8000880:	61bb      	str	r3, [r7, #24]
  8000882:	e00a      	b.n	800089a <MFRC522_ToCard+0x17a>
-                {
-					backData[i] = Read_MFRC522(FIFODataReg);
  8000884:	687a      	ldr	r2, [r7, #4]
  8000886:	69bb      	ldr	r3, [r7, #24]
  8000888:	18d4      	adds	r4, r2, r3
@@ -986,7 +773,6 @@ uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backD
  800088c:	f7ff fea3 	bl	80005d6 <Read_MFRC522>
  8000890:	4603      	mov	r3, r0
  8000892:	7023      	strb	r3, [r4, #0]
-                for (i=0; i<n; i++)
  8000894:	69bb      	ldr	r3, [r7, #24]
  8000896:	3301      	adds	r3, #1
  8000898:	61bb      	str	r3, [r7, #24]
@@ -995,53 +781,27 @@ uchar MFRC522_ToCard(uchar command, uchar *sendData, uchar sendLen, uchar *backD
  800089e:	429a      	cmp	r2, r3
  80008a0:	d3f0      	bcc.n	8000884 <MFRC522_ToCard+0x164>
  80008a2:	e001      	b.n	80008a8 <MFRC522_ToCard+0x188>
-				}
-            }
-        }
-        else
-        {
-			status = MI_ERR;
  80008a4:	2302      	movs	r3, #2
  80008a6:	77fb      	strb	r3, [r7, #31]
-    }
-
-    //SetBitMask(ControlReg,0x80);           //timer stops
-    //Write_MFRC522(CommandReg, PCD_IDLE);
-
-    return status;
  80008a8:	7ffb      	ldrb	r3, [r7, #31]
-}
  80008aa:	4618      	mov	r0, r3
  80008ac:	3724      	adds	r7, #36	@ 0x24
  80008ae:	46bd      	mov	sp, r7
  80008b0:	bd90      	pop	{r4, r7, pc}
 
 080008b2 <MFRC522_Request>:
- *    0x0800 = Mifare_Pro(X)
- *    0x4403 = Mifare_DESFire
- * Return value: the successful return MI_OK
- */
-uchar MFRC522_Request(uchar reqMode, uchar *TagType)
-{
  80008b2:	b580      	push	{r7, lr}
  80008b4:	b086      	sub	sp, #24
  80008b6:	af02      	add	r7, sp, #8
  80008b8:	4603      	mov	r3, r0
  80008ba:	6039      	str	r1, [r7, #0]
  80008bc:	71fb      	strb	r3, [r7, #7]
-	uchar status;
-	uint backBits;			 // The received data bits
-
-	Write_MFRC522(BitFramingReg, 0x07);		//TxLastBists = BitFramingReg[2..0]
  80008be:	2107      	movs	r1, #7
  80008c0:	200d      	movs	r0, #13
  80008c2:	f7ff fe63 	bl	800058c <Write_MFRC522>
-
-	TagType[0] = reqMode;
  80008c6:	683b      	ldr	r3, [r7, #0]
  80008c8:	79fa      	ldrb	r2, [r7, #7]
  80008ca:	701a      	strb	r2, [r3, #0]
-	status = MFRC522_ToCard(PCD_TRANSCEIVE, TagType, 1, TagType, &backBits);
  80008cc:	f107 0308 	add.w	r3, r7, #8
  80008d0:	9300      	str	r3, [sp, #0]
  80008d2:	683b      	ldr	r3, [r7, #0]
@@ -1051,61 +811,37 @@ uchar MFRC522_Request(uchar reqMode, uchar *TagType)
  80008da:	f7ff ff21 	bl	8000720 <MFRC522_ToCard>
  80008de:	4603      	mov	r3, r0
  80008e0:	73fb      	strb	r3, [r7, #15]
-
-	if ((status != MI_OK) || (backBits != 0x10))
  80008e2:	7bfb      	ldrb	r3, [r7, #15]
  80008e4:	2b00      	cmp	r3, #0
  80008e6:	d102      	bne.n	80008ee <MFRC522_Request+0x3c>
  80008e8:	68bb      	ldr	r3, [r7, #8]
  80008ea:	2b10      	cmp	r3, #16
  80008ec:	d001      	beq.n	80008f2 <MFRC522_Request+0x40>
-	{
-		status = MI_ERR;
  80008ee:	2302      	movs	r3, #2
  80008f0:	73fb      	strb	r3, [r7, #15]
-	}
-
-	return status;
  80008f2:	7bfb      	ldrb	r3, [r7, #15]
-}
  80008f4:	4618      	mov	r0, r3
  80008f6:	3710      	adds	r7, #16
  80008f8:	46bd      	mov	sp, r7
  80008fa:	bd80      	pop	{r7, pc}
 
 080008fc <MFRC522_Anticoll>:
- * Description: Anti-collision detection, reading selected card serial number card
- * Input parameters: serNum - returns 4 bytes card serial number, the first 5 bytes for the checksum byte
- * Return value: the successful return MI_OK
- */
-uchar MFRC522_Anticoll(uchar *serNum)
-{
  80008fc:	b580      	push	{r7, lr}
  80008fe:	b086      	sub	sp, #24
  8000900:	af02      	add	r7, sp, #8
  8000902:	6078      	str	r0, [r7, #4]
-    uchar status;
-    uchar i;
-	uchar serNumCheck=0;
  8000904:	2300      	movs	r3, #0
  8000906:	737b      	strb	r3, [r7, #13]
-    uint unLen;
-
-	Write_MFRC522(BitFramingReg, 0x00);		//TxLastBists = BitFramingReg[2..0]
  8000908:	2100      	movs	r1, #0
  800090a:	200d      	movs	r0, #13
  800090c:	f7ff fe3e 	bl	800058c <Write_MFRC522>
-
-    serNum[0] = PICC_ANTICOLL;
  8000910:	687b      	ldr	r3, [r7, #4]
  8000912:	2293      	movs	r2, #147	@ 0x93
  8000914:	701a      	strb	r2, [r3, #0]
-    serNum[1] = 0x20;
  8000916:	687b      	ldr	r3, [r7, #4]
  8000918:	3301      	adds	r3, #1
  800091a:	2220      	movs	r2, #32
  800091c:	701a      	strb	r2, [r3, #0]
-    status = MFRC522_ToCard(PCD_TRANSCEIVE, serNum, 2, serNum, &unLen);
  800091e:	f107 0308 	add.w	r3, r7, #8
  8000922:	9300      	str	r3, [sp, #0]
  8000924:	687b      	ldr	r3, [r7, #4]
@@ -1115,19 +851,12 @@ uchar MFRC522_Anticoll(uchar *serNum)
  800092c:	f7ff fef8 	bl	8000720 <MFRC522_ToCard>
  8000930:	4603      	mov	r3, r0
  8000932:	73fb      	strb	r3, [r7, #15]
-
-    if (status == MI_OK)
  8000934:	7bfb      	ldrb	r3, [r7, #15]
  8000936:	2b00      	cmp	r3, #0
  8000938:	d118      	bne.n	800096c <MFRC522_Anticoll+0x70>
-	{
-    	 //Check card serial number
-		for (i=0; i<4; i++)
  800093a:	2300      	movs	r3, #0
  800093c:	73bb      	strb	r3, [r7, #14]
  800093e:	e009      	b.n	8000954 <MFRC522_Anticoll+0x58>
-		{
-		 	serNumCheck ^= serNum[i];
  8000940:	7bbb      	ldrb	r3, [r7, #14]
  8000942:	687a      	ldr	r2, [r7, #4]
  8000944:	4413      	add	r3, r2
@@ -1135,15 +864,12 @@ uchar MFRC522_Anticoll(uchar *serNum)
  8000948:	7b7b      	ldrb	r3, [r7, #13]
  800094a:	4053      	eors	r3, r2
  800094c:	737b      	strb	r3, [r7, #13]
-		for (i=0; i<4; i++)
  800094e:	7bbb      	ldrb	r3, [r7, #14]
  8000950:	3301      	adds	r3, #1
  8000952:	73bb      	strb	r3, [r7, #14]
  8000954:	7bbb      	ldrb	r3, [r7, #14]
  8000956:	2b03      	cmp	r3, #3
  8000958:	d9f2      	bls.n	8000940 <MFRC522_Anticoll+0x44>
-		}
-		if (serNumCheck != serNum[i])
  800095a:	7bbb      	ldrb	r3, [r7, #14]
  800095c:	687a      	ldr	r2, [r7, #4]
  800095e:	4413      	add	r3, r2
@@ -1151,16 +877,9 @@ uchar MFRC522_Anticoll(uchar *serNum)
  8000962:	7b7a      	ldrb	r2, [r7, #13]
  8000964:	429a      	cmp	r2, r3
  8000966:	d001      	beq.n	800096c <MFRC522_Anticoll+0x70>
-		{
-			status = MI_ERR;
  8000968:	2302      	movs	r3, #2
  800096a:	73fb      	strb	r3, [r7, #15]
-		}
-    }
-
-    return status;
  800096c:	7bfb      	ldrb	r3, [r7, #15]
-}
  800096e:	4618      	mov	r0, r3
  8000970:	3710      	adds	r7, #16
  8000972:	46bd      	mov	sp, r7
@@ -1168,20 +887,11 @@ uchar MFRC522_Anticoll(uchar *serNum)
 	...
 
 08000978 <scanPas>:
-	char *msg3 = "Place card to read\r\n";
-
-uint8_t Data = 0; //variabele voor RFID Data
-char revbuf[50];
-
-int scanPas() {
  8000978:	b580      	push	{r7, lr}
  800097a:	b082      	sub	sp, #8
  800097c:	af00      	add	r7, sp, #0
-	int waarde = 0;
  800097e:	2300      	movs	r3, #0
  8000980:	607b      	str	r3, [r7, #4]
-
-status = MFRC522_Request(PICC_REQIDL, str);
  8000982:	4917      	ldr	r1, [pc, #92]	@ (80009e0 <scanPas+0x68>)
  8000984:	2026      	movs	r0, #38	@ 0x26
  8000986:	f7ff ff94 	bl	80008b2 <MFRC522_Request>
@@ -1189,29 +899,24 @@ status = MFRC522_Request(PICC_REQIDL, str);
  800098c:	461a      	mov	r2, r3
  800098e:	4b15      	ldr	r3, [pc, #84]	@ (80009e4 <scanPas+0x6c>)
  8000990:	701a      	strb	r2, [r3, #0]
-if (status == MI_OK) {
  8000992:	4b14      	ldr	r3, [pc, #80]	@ (80009e4 <scanPas+0x6c>)
  8000994:	781b      	ldrb	r3, [r3, #0]
  8000996:	2b00      	cmp	r3, #0
  8000998:	d11d      	bne.n	80009d6 <scanPas+0x5e>
-	status = MFRC522_Anticoll(str);
  800099a:	4811      	ldr	r0, [pc, #68]	@ (80009e0 <scanPas+0x68>)
  800099c:	f7ff ffae 	bl	80008fc <MFRC522_Anticoll>
  80009a0:	4603      	mov	r3, r0
  80009a2:	461a      	mov	r2, r3
  80009a4:	4b0f      	ldr	r3, [pc, #60]	@ (80009e4 <scanPas+0x6c>)
  80009a6:	701a      	strb	r2, [r3, #0]
-	memcpy(sNum, str, 5);
  80009a8:	4b0f      	ldr	r3, [pc, #60]	@ (80009e8 <scanPas+0x70>)
  80009aa:	4a0d      	ldr	r2, [pc, #52]	@ (80009e0 <scanPas+0x68>)
  80009ac:	e892 0003 	ldmia.w	r2, {r0, r1}
  80009b0:	6018      	str	r0, [r3, #0]
  80009b2:	3304      	adds	r3, #4
  80009b4:	7019      	strb	r1, [r3, #0]
-	HAL_Delay(200);
  80009b6:	20c8      	movs	r0, #200	@ 0xc8
  80009b8:	f000 fcae 	bl	8001318 <HAL_Delay>
-waarde = sNum[1] + sNum[3] + sNum[5] + sNum[2];
  80009bc:	4b0a      	ldr	r3, [pc, #40]	@ (80009e8 <scanPas+0x70>)
  80009be:	785b      	ldrb	r3, [r3, #1]
  80009c0:	461a      	mov	r2, r3
@@ -1225,10 +930,7 @@ waarde = sNum[1] + sNum[3] + sNum[5] + sNum[2];
  80009d0:	7892      	ldrb	r2, [r2, #2]
  80009d2:	4413      	add	r3, r2
  80009d4:	607b      	str	r3, [r7, #4]
-	  	}
-	  	 return waarde;
  80009d6:	687b      	ldr	r3, [r7, #4]
-}
  80009d8:	4618      	mov	r0, r3
  80009da:	3708      	adds	r7, #8
  80009dc:	46bd      	mov	sp, r7
@@ -1968,21 +1670,9 @@ __STATIC_FORCEINLINE void __disable_irq(void)
  8000de2:	e7fd      	b.n	8000de0 <Error_Handler+0x8>
 
 08000de4 <HAL_MspInit>:
-/* USER CODE END 0 */
-/**
-  * Initializes the Global MSP.
-  */
-void HAL_MspInit(void)
-{
  8000de4:	b480      	push	{r7}
  8000de6:	b083      	sub	sp, #12
  8000de8:	af00      	add	r7, sp, #0
-
-  /* USER CODE BEGIN MspInit 0 */
-
-  /* USER CODE END MspInit 0 */
-
-  __HAL_RCC_SYSCFG_CLK_ENABLE();
  8000dea:	4b0f      	ldr	r3, [pc, #60]	@ (8000e28 <HAL_MspInit+0x44>)
  8000dec:	6e1b      	ldr	r3, [r3, #96]	@ 0x60
  8000dee:	4a0e      	ldr	r2, [pc, #56]	@ (8000e28 <HAL_MspInit+0x44>)
@@ -1993,7 +1683,6 @@ void HAL_MspInit(void)
  8000dfa:	f003 0301 	and.w	r3, r3, #1
  8000dfe:	607b      	str	r3, [r7, #4]
  8000e00:	687b      	ldr	r3, [r7, #4]
-  __HAL_RCC_PWR_CLK_ENABLE();
  8000e02:	4b09      	ldr	r3, [pc, #36]	@ (8000e28 <HAL_MspInit+0x44>)
  8000e04:	6d9b      	ldr	r3, [r3, #88]	@ 0x58
  8000e06:	4a08      	ldr	r2, [pc, #32]	@ (8000e28 <HAL_MspInit+0x44>)
@@ -2004,12 +1693,6 @@ void HAL_MspInit(void)
  8000e12:	f003 5380 	and.w	r3, r3, #268435456	@ 0x10000000
  8000e16:	603b      	str	r3, [r7, #0]
  8000e18:	683b      	ldr	r3, [r7, #0]
-  /* System interrupt init*/
-
-  /* USER CODE BEGIN MspInit 1 */
-
-  /* USER CODE END MspInit 1 */
-}
  8000e1a:	bf00      	nop
  8000e1c:	370c      	adds	r7, #12
  8000e1e:	46bd      	mov	sp, r7
@@ -2019,17 +1702,10 @@ void HAL_MspInit(void)
  8000e28:	40021000 	.word	0x40021000
 
 08000e2c <HAL_I2C_MspInit>:
-* This function configures the hardware resources used in this example
-* @param hi2c: I2C handle pointer
-* @retval None
-*/
-void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
-{
  8000e2c:	b580      	push	{r7, lr}
  8000e2e:	b09e      	sub	sp, #120	@ 0x78
  8000e30:	af00      	add	r7, sp, #0
  8000e32:	6078      	str	r0, [r7, #4]
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
  8000e34:	f107 0364 	add.w	r3, r7, #100	@ 0x64
  8000e38:	2200      	movs	r2, #0
  8000e3a:	601a      	str	r2, [r3, #0]
@@ -2037,42 +1713,27 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
  8000e3e:	609a      	str	r2, [r3, #8]
  8000e40:	60da      	str	r2, [r3, #12]
  8000e42:	611a      	str	r2, [r3, #16]
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
  8000e44:	f107 0310 	add.w	r3, r7, #16
  8000e48:	2254      	movs	r2, #84	@ 0x54
  8000e4a:	2100      	movs	r1, #0
  8000e4c:	4618      	mov	r0, r3
  8000e4e:	f005 f959 	bl	8006104 <memset>
-  if(hi2c->Instance==I2C1)
  8000e52:	687b      	ldr	r3, [r7, #4]
  8000e54:	681b      	ldr	r3, [r3, #0]
  8000e56:	4a3c      	ldr	r2, [pc, #240]	@ (8000f48 <HAL_I2C_MspInit+0x11c>)
  8000e58:	4293      	cmp	r3, r2
  8000e5a:	d170      	bne.n	8000f3e <HAL_I2C_MspInit+0x112>
-
-  /* USER CODE END I2C1_MspInit 0 */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
  8000e5c:	2340      	movs	r3, #64	@ 0x40
  8000e5e:	613b      	str	r3, [r7, #16]
-    PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
  8000e60:	2300      	movs	r3, #0
  8000e62:	63fb      	str	r3, [r7, #60]	@ 0x3c
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
  8000e64:	f107 0310 	add.w	r3, r7, #16
  8000e68:	4618      	mov	r0, r3
  8000e6a:	f003 fced 	bl	8004848 <HAL_RCCEx_PeriphCLKConfig>
  8000e6e:	4603      	mov	r3, r0
  8000e70:	2b00      	cmp	r3, #0
  8000e72:	d001      	beq.n	8000e78 <HAL_I2C_MspInit+0x4c>
-    {
-      Error_Handler();
  8000e74:	f7ff ffb0 	bl	8000dd8 <Error_Handler>
-    }
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();
  8000e78:	4b34      	ldr	r3, [pc, #208]	@ (8000f4c <HAL_I2C_MspInit+0x120>)
  8000e7a:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
  8000e7c:	4a33      	ldr	r2, [pc, #204]	@ (8000f4c <HAL_I2C_MspInit+0x120>)
@@ -2083,33 +1744,20 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
  8000e88:	f003 0301 	and.w	r3, r3, #1
  8000e8c:	60fb      	str	r3, [r7, #12]
  8000e8e:	68fb      	ldr	r3, [r7, #12]
-    /**I2C1 GPIO Configuration
-    PA9     ------> I2C1_SCL
-    PA10     ------> I2C1_SDA
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
  8000e90:	f44f 63c0 	mov.w	r3, #1536	@ 0x600
  8000e94:	667b      	str	r3, [r7, #100]	@ 0x64
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
  8000e96:	2312      	movs	r3, #18
  8000e98:	66bb      	str	r3, [r7, #104]	@ 0x68
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
  8000e9a:	2300      	movs	r3, #0
  8000e9c:	66fb      	str	r3, [r7, #108]	@ 0x6c
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
  8000e9e:	2303      	movs	r3, #3
  8000ea0:	673b      	str	r3, [r7, #112]	@ 0x70
-    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
  8000ea2:	2304      	movs	r3, #4
  8000ea4:	677b      	str	r3, [r7, #116]	@ 0x74
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
  8000ea6:	f107 0364 	add.w	r3, r7, #100	@ 0x64
  8000eaa:	4619      	mov	r1, r3
  8000eac:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  8000eb0:	f000 fd1e 	bl	80018f0 <HAL_GPIO_Init>
-
-    /* Peripheral clock enable */
-    __HAL_RCC_I2C1_CLK_ENABLE();
  8000eb4:	4b25      	ldr	r3, [pc, #148]	@ (8000f4c <HAL_I2C_MspInit+0x120>)
  8000eb6:	6d9b      	ldr	r3, [r3, #88]	@ 0x58
  8000eb8:	4a24      	ldr	r2, [pc, #144]	@ (8000f4c <HAL_I2C_MspInit+0x120>)
@@ -2120,87 +1768,57 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
  8000ec4:	f403 1300 	and.w	r3, r3, #2097152	@ 0x200000
  8000ec8:	60bb      	str	r3, [r7, #8]
  8000eca:	68bb      	ldr	r3, [r7, #8]
-
-    /* I2C1 DMA Init */
-    /* I2C1_RX Init */
-    hdma_i2c1_rx.Instance = DMA1_Channel7;
  8000ecc:	4b20      	ldr	r3, [pc, #128]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000ece:	4a21      	ldr	r2, [pc, #132]	@ (8000f54 <HAL_I2C_MspInit+0x128>)
  8000ed0:	601a      	str	r2, [r3, #0]
-    hdma_i2c1_rx.Init.Request = DMA_REQUEST_3;
  8000ed2:	4b1f      	ldr	r3, [pc, #124]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000ed4:	2203      	movs	r2, #3
  8000ed6:	605a      	str	r2, [r3, #4]
-    hdma_i2c1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
  8000ed8:	4b1d      	ldr	r3, [pc, #116]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000eda:	2200      	movs	r2, #0
  8000edc:	609a      	str	r2, [r3, #8]
-    hdma_i2c1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
  8000ede:	4b1c      	ldr	r3, [pc, #112]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000ee0:	2200      	movs	r2, #0
  8000ee2:	60da      	str	r2, [r3, #12]
-    hdma_i2c1_rx.Init.MemInc = DMA_MINC_ENABLE;
  8000ee4:	4b1a      	ldr	r3, [pc, #104]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000ee6:	2280      	movs	r2, #128	@ 0x80
  8000ee8:	611a      	str	r2, [r3, #16]
-    hdma_i2c1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
  8000eea:	4b19      	ldr	r3, [pc, #100]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000eec:	2200      	movs	r2, #0
  8000eee:	615a      	str	r2, [r3, #20]
-    hdma_i2c1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
  8000ef0:	4b17      	ldr	r3, [pc, #92]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000ef2:	2200      	movs	r2, #0
  8000ef4:	619a      	str	r2, [r3, #24]
-    hdma_i2c1_rx.Init.Mode = DMA_NORMAL;
  8000ef6:	4b16      	ldr	r3, [pc, #88]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000ef8:	2200      	movs	r2, #0
  8000efa:	61da      	str	r2, [r3, #28]
-    hdma_i2c1_rx.Init.Priority = DMA_PRIORITY_LOW;
  8000efc:	4b14      	ldr	r3, [pc, #80]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000efe:	2200      	movs	r2, #0
  8000f00:	621a      	str	r2, [r3, #32]
-    if (HAL_DMA_Init(&hdma_i2c1_rx) != HAL_OK)
  8000f02:	4813      	ldr	r0, [pc, #76]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000f04:	f000 fb3e 	bl	8001584 <HAL_DMA_Init>
  8000f08:	4603      	mov	r3, r0
  8000f0a:	2b00      	cmp	r3, #0
  8000f0c:	d001      	beq.n	8000f12 <HAL_I2C_MspInit+0xe6>
-    {
-      Error_Handler();
  8000f0e:	f7ff ff63 	bl	8000dd8 <Error_Handler>
-    }
-
-    __HAL_LINKDMA(hi2c,hdmarx,hdma_i2c1_rx);
  8000f12:	687b      	ldr	r3, [r7, #4]
  8000f14:	4a0e      	ldr	r2, [pc, #56]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000f16:	63da      	str	r2, [r3, #60]	@ 0x3c
  8000f18:	4a0d      	ldr	r2, [pc, #52]	@ (8000f50 <HAL_I2C_MspInit+0x124>)
  8000f1a:	687b      	ldr	r3, [r7, #4]
  8000f1c:	6293      	str	r3, [r2, #40]	@ 0x28
-
-    /* I2C1 interrupt Init */
-    HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
  8000f1e:	2200      	movs	r2, #0
  8000f20:	2100      	movs	r1, #0
  8000f22:	201f      	movs	r0, #31
  8000f24:	f000 faf7 	bl	8001516 <HAL_NVIC_SetPriority>
-    HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
  8000f28:	201f      	movs	r0, #31
  8000f2a:	f000 fb10 	bl	800154e <HAL_NVIC_EnableIRQ>
-    HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
  8000f2e:	2200      	movs	r2, #0
  8000f30:	2100      	movs	r1, #0
  8000f32:	2020      	movs	r0, #32
  8000f34:	f000 faef 	bl	8001516 <HAL_NVIC_SetPriority>
-    HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
  8000f38:	2020      	movs	r0, #32
  8000f3a:	f000 fb08 	bl	800154e <HAL_NVIC_EnableIRQ>
-
-  /* USER CODE END I2C1_MspInit 1 */
-
-  }
-
-}
  8000f3e:	bf00      	nop
  8000f40:	3778      	adds	r7, #120	@ 0x78
  8000f42:	46bd      	mov	sp, r7
@@ -2212,17 +1830,10 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
  8000f54:	40020080 	.word	0x40020080
 
 08000f58 <HAL_SPI_MspInit>:
-* This function configures the hardware resources used in this example
-* @param hspi: SPI handle pointer
-* @retval None
-*/
-void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
-{
  8000f58:	b580      	push	{r7, lr}
  8000f5a:	b08a      	sub	sp, #40	@ 0x28
  8000f5c:	af00      	add	r7, sp, #0
  8000f5e:	6078      	str	r0, [r7, #4]
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
  8000f60:	f107 0314 	add.w	r3, r7, #20
  8000f64:	2200      	movs	r2, #0
  8000f66:	601a      	str	r2, [r3, #0]
@@ -2230,18 +1841,11 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
  8000f6a:	609a      	str	r2, [r3, #8]
  8000f6c:	60da      	str	r2, [r3, #12]
  8000f6e:	611a      	str	r2, [r3, #16]
-  if(hspi->Instance==SPI1)
  8000f70:	687b      	ldr	r3, [r7, #4]
  8000f72:	681b      	ldr	r3, [r3, #0]
  8000f74:	4a17      	ldr	r2, [pc, #92]	@ (8000fd4 <HAL_SPI_MspInit+0x7c>)
  8000f76:	4293      	cmp	r3, r2
  8000f78:	d128      	bne.n	8000fcc <HAL_SPI_MspInit+0x74>
-  {
-  /* USER CODE BEGIN SPI1_MspInit 0 */
-
-  /* USER CODE END SPI1_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_SPI1_CLK_ENABLE();
  8000f7a:	4b17      	ldr	r3, [pc, #92]	@ (8000fd8 <HAL_SPI_MspInit+0x80>)
  8000f7c:	6e1b      	ldr	r3, [r3, #96]	@ 0x60
  8000f7e:	4a16      	ldr	r2, [pc, #88]	@ (8000fd8 <HAL_SPI_MspInit+0x80>)
@@ -2252,8 +1856,6 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
  8000f8a:	f403 5380 	and.w	r3, r3, #4096	@ 0x1000
  8000f8e:	613b      	str	r3, [r7, #16]
  8000f90:	693b      	ldr	r3, [r7, #16]
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();
  8000f92:	4b11      	ldr	r3, [pc, #68]	@ (8000fd8 <HAL_SPI_MspInit+0x80>)
  8000f94:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
  8000f96:	4a10      	ldr	r2, [pc, #64]	@ (8000fd8 <HAL_SPI_MspInit+0x80>)
@@ -2264,37 +1866,20 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
  8000fa2:	f003 0301 	and.w	r3, r3, #1
  8000fa6:	60fb      	str	r3, [r7, #12]
  8000fa8:	68fb      	ldr	r3, [r7, #12]
-    /**SPI1 GPIO Configuration
-    PA5     ------> SPI1_SCK
-    PA6     ------> SPI1_MISO
-    PA7     ------> SPI1_MOSI
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
  8000faa:	23e0      	movs	r3, #224	@ 0xe0
  8000fac:	617b      	str	r3, [r7, #20]
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
  8000fae:	2302      	movs	r3, #2
  8000fb0:	61bb      	str	r3, [r7, #24]
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
  8000fb2:	2300      	movs	r3, #0
  8000fb4:	61fb      	str	r3, [r7, #28]
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
  8000fb6:	2303      	movs	r3, #3
  8000fb8:	623b      	str	r3, [r7, #32]
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
  8000fba:	2305      	movs	r3, #5
  8000fbc:	627b      	str	r3, [r7, #36]	@ 0x24
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
  8000fbe:	f107 0314 	add.w	r3, r7, #20
  8000fc2:	4619      	mov	r1, r3
  8000fc4:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  8000fc8:	f000 fc92 	bl	80018f0 <HAL_GPIO_Init>
-
-  /* USER CODE END SPI1_MspInit 1 */
-
-  }
-
-}
  8000fcc:	bf00      	nop
  8000fce:	3728      	adds	r7, #40	@ 0x28
  8000fd0:	46bd      	mov	sp, r7
@@ -2303,17 +1888,10 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
  8000fd8:	40021000 	.word	0x40021000
 
 08000fdc <HAL_UART_MspInit>:
-* This function configures the hardware resources used in this example
-* @param huart: UART handle pointer
-* @retval None
-*/
-void HAL_UART_MspInit(UART_HandleTypeDef* huart)
-{
  8000fdc:	b580      	push	{r7, lr}
  8000fde:	b09e      	sub	sp, #120	@ 0x78
  8000fe0:	af00      	add	r7, sp, #0
  8000fe2:	6078      	str	r0, [r7, #4]
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
  8000fe4:	f107 0364 	add.w	r3, r7, #100	@ 0x64
  8000fe8:	2200      	movs	r2, #0
  8000fea:	601a      	str	r2, [r3, #0]
@@ -2321,43 +1899,27 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
  8000fee:	609a      	str	r2, [r3, #8]
  8000ff0:	60da      	str	r2, [r3, #12]
  8000ff2:	611a      	str	r2, [r3, #16]
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
  8000ff4:	f107 0310 	add.w	r3, r7, #16
  8000ff8:	2254      	movs	r2, #84	@ 0x54
  8000ffa:	2100      	movs	r1, #0
  8000ffc:	4618      	mov	r0, r3
  8000ffe:	f005 f881 	bl	8006104 <memset>
-  if(huart->Instance==USART2)
  8001002:	687b      	ldr	r3, [r7, #4]
  8001004:	681b      	ldr	r3, [r3, #0]
  8001006:	4a28      	ldr	r2, [pc, #160]	@ (80010a8 <HAL_UART_MspInit+0xcc>)
  8001008:	4293      	cmp	r3, r2
  800100a:	d148      	bne.n	800109e <HAL_UART_MspInit+0xc2>
-
-  /* USER CODE END USART2_MspInit 0 */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
  800100c:	2302      	movs	r3, #2
  800100e:	613b      	str	r3, [r7, #16]
-    PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
  8001010:	2300      	movs	r3, #0
  8001012:	637b      	str	r3, [r7, #52]	@ 0x34
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
  8001014:	f107 0310 	add.w	r3, r7, #16
  8001018:	4618      	mov	r0, r3
  800101a:	f003 fc15 	bl	8004848 <HAL_RCCEx_PeriphCLKConfig>
  800101e:	4603      	mov	r3, r0
  8001020:	2b00      	cmp	r3, #0
  8001022:	d001      	beq.n	8001028 <HAL_UART_MspInit+0x4c>
-    {
-      Error_Handler();
  8001024:	f7ff fed8 	bl	8000dd8 <Error_Handler>
-    }
-
-    /* Peripheral clock enable */
-    __HAL_RCC_USART2_CLK_ENABLE();
  8001028:	4b20      	ldr	r3, [pc, #128]	@ (80010ac <HAL_UART_MspInit+0xd0>)
  800102a:	6d9b      	ldr	r3, [r3, #88]	@ 0x58
  800102c:	4a1f      	ldr	r2, [pc, #124]	@ (80010ac <HAL_UART_MspInit+0xd0>)
@@ -2368,8 +1930,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
  8001038:	f403 3300 	and.w	r3, r3, #131072	@ 0x20000
  800103c:	60fb      	str	r3, [r7, #12]
  800103e:	68fb      	ldr	r3, [r7, #12]
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();
  8001040:	4b1a      	ldr	r3, [pc, #104]	@ (80010ac <HAL_UART_MspInit+0xd0>)
  8001042:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
  8001044:	4a19      	ldr	r2, [pc, #100]	@ (80010ac <HAL_UART_MspInit+0xd0>)
@@ -2380,57 +1940,34 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
  8001050:	f003 0301 	and.w	r3, r3, #1
  8001054:	60bb      	str	r3, [r7, #8]
  8001056:	68bb      	ldr	r3, [r7, #8]
-    /**USART2 GPIO Configuration
-    PA2     ------> USART2_TX
-    PA15 (JTDI)     ------> USART2_RX
-    */
-    GPIO_InitStruct.Pin = VCP_TX_Pin;
  8001058:	2304      	movs	r3, #4
  800105a:	667b      	str	r3, [r7, #100]	@ 0x64
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
  800105c:	2302      	movs	r3, #2
  800105e:	66bb      	str	r3, [r7, #104]	@ 0x68
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
  8001060:	2300      	movs	r3, #0
  8001062:	66fb      	str	r3, [r7, #108]	@ 0x6c
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
  8001064:	2303      	movs	r3, #3
  8001066:	673b      	str	r3, [r7, #112]	@ 0x70
-    GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
  8001068:	2307      	movs	r3, #7
  800106a:	677b      	str	r3, [r7, #116]	@ 0x74
-    HAL_GPIO_Init(VCP_TX_GPIO_Port, &GPIO_InitStruct);
  800106c:	f107 0364 	add.w	r3, r7, #100	@ 0x64
  8001070:	4619      	mov	r1, r3
  8001072:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  8001076:	f000 fc3b 	bl	80018f0 <HAL_GPIO_Init>
-
-    GPIO_InitStruct.Pin = VCP_RX_Pin;
  800107a:	f44f 4300 	mov.w	r3, #32768	@ 0x8000
  800107e:	667b      	str	r3, [r7, #100]	@ 0x64
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
  8001080:	2302      	movs	r3, #2
  8001082:	66bb      	str	r3, [r7, #104]	@ 0x68
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
  8001084:	2300      	movs	r3, #0
  8001086:	66fb      	str	r3, [r7, #108]	@ 0x6c
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
  8001088:	2303      	movs	r3, #3
  800108a:	673b      	str	r3, [r7, #112]	@ 0x70
-    GPIO_InitStruct.Alternate = GPIO_AF3_USART2;
  800108c:	2303      	movs	r3, #3
  800108e:	677b      	str	r3, [r7, #116]	@ 0x74
-    HAL_GPIO_Init(VCP_RX_GPIO_Port, &GPIO_InitStruct);
  8001090:	f107 0364 	add.w	r3, r7, #100	@ 0x64
  8001094:	4619      	mov	r1, r3
  8001096:	f04f 4090 	mov.w	r0, #1207959552	@ 0x48000000
  800109a:	f000 fc29 	bl	80018f0 <HAL_GPIO_Init>
-
-  /* USER CODE END USART2_MspInit 1 */
-
-  }
-
-}
  800109e:	bf00      	nop
  80010a0:	3778      	adds	r7, #120	@ 0x78
  80010a2:	46bd      	mov	sp, r7
@@ -2440,279 +1977,115 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
  80010ac:	40021000 	.word	0x40021000
 
 080010b0 <NMI_Handler>:
-/******************************************************************************/
-/**
-  * @brief This function handles Non maskable interrupt.
-  */
-void NMI_Handler(void)
-{
  80010b0:	b480      	push	{r7}
  80010b2:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
-
-  /* USER CODE END NonMaskableInt_IRQn 0 */
-  /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-   while (1)
  80010b4:	bf00      	nop
  80010b6:	e7fd      	b.n	80010b4 <NMI_Handler+0x4>
 
 080010b8 <HardFault_Handler>:
-
-/**
-  * @brief This function handles Hard fault interrupt.
-  */
-void HardFault_Handler(void)
-{
  80010b8:	b480      	push	{r7}
  80010ba:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN HardFault_IRQn 0 */
-
-  /* USER CODE END HardFault_IRQn 0 */
-  while (1)
  80010bc:	bf00      	nop
  80010be:	e7fd      	b.n	80010bc <HardFault_Handler+0x4>
 
 080010c0 <MemManage_Handler>:
-
-/**
-  * @brief This function handles Memory management fault.
-  */
-void MemManage_Handler(void)
-{
  80010c0:	b480      	push	{r7}
  80010c2:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN MemoryManagement_IRQn 0 */
-
-  /* USER CODE END MemoryManagement_IRQn 0 */
-  while (1)
  80010c4:	bf00      	nop
  80010c6:	e7fd      	b.n	80010c4 <MemManage_Handler+0x4>
 
 080010c8 <BusFault_Handler>:
-
-/**
-  * @brief This function handles Prefetch fault, memory access fault.
-  */
-void BusFault_Handler(void)
-{
  80010c8:	b480      	push	{r7}
  80010ca:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN BusFault_IRQn 0 */
-
-  /* USER CODE END BusFault_IRQn 0 */
-  while (1)
  80010cc:	bf00      	nop
  80010ce:	e7fd      	b.n	80010cc <BusFault_Handler+0x4>
 
 080010d0 <UsageFault_Handler>:
-
-/**
-  * @brief This function handles Undefined instruction or illegal state.
-  */
-void UsageFault_Handler(void)
-{
  80010d0:	b480      	push	{r7}
  80010d2:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN UsageFault_IRQn 0 */
-
-  /* USER CODE END UsageFault_IRQn 0 */
-  while (1)
  80010d4:	bf00      	nop
  80010d6:	e7fd      	b.n	80010d4 <UsageFault_Handler+0x4>
 
 080010d8 <SVC_Handler>:
-
-/**
-  * @brief This function handles System service call via SWI instruction.
-  */
-void SVC_Handler(void)
-{
  80010d8:	b480      	push	{r7}
  80010da:	af00      	add	r7, sp, #0
-
-  /* USER CODE END SVCall_IRQn 0 */
-  /* USER CODE BEGIN SVCall_IRQn 1 */
-
-  /* USER CODE END SVCall_IRQn 1 */
-}
  80010dc:	bf00      	nop
  80010de:	46bd      	mov	sp, r7
  80010e0:	f85d 7b04 	ldr.w	r7, [sp], #4
  80010e4:	4770      	bx	lr
 
 080010e6 <DebugMon_Handler>:
-
-/**
-  * @brief This function handles Debug monitor.
-  */
-void DebugMon_Handler(void)
-{
  80010e6:	b480      	push	{r7}
  80010e8:	af00      	add	r7, sp, #0
-
-  /* USER CODE END DebugMonitor_IRQn 0 */
-  /* USER CODE BEGIN DebugMonitor_IRQn 1 */
-
-  /* USER CODE END DebugMonitor_IRQn 1 */
-}
  80010ea:	bf00      	nop
  80010ec:	46bd      	mov	sp, r7
  80010ee:	f85d 7b04 	ldr.w	r7, [sp], #4
  80010f2:	4770      	bx	lr
 
 080010f4 <PendSV_Handler>:
-
-/**
-  * @brief This function handles Pendable request for system service.
-  */
-void PendSV_Handler(void)
-{
  80010f4:	b480      	push	{r7}
  80010f6:	af00      	add	r7, sp, #0
-
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
-
-  /* USER CODE END PendSV_IRQn 1 */
-}
  80010f8:	bf00      	nop
  80010fa:	46bd      	mov	sp, r7
  80010fc:	f85d 7b04 	ldr.w	r7, [sp], #4
  8001100:	4770      	bx	lr
 
 08001102 <SysTick_Handler>:
-
-/**
-  * @brief This function handles System tick timer.
-  */
-void SysTick_Handler(void)
-{
  8001102:	b580      	push	{r7, lr}
  8001104:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
  8001106:	f000 f8e7 	bl	80012d8 <HAL_IncTick>
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-
-  /* USER CODE END SysTick_IRQn 1 */
-}
  800110a:	bf00      	nop
  800110c:	bd80      	pop	{r7, pc}
 	...
 
 08001110 <DMA1_Channel7_IRQHandler>:
-
-/**
-  * @brief This function handles DMA1 channel7 global interrupt.
-  */
-void DMA1_Channel7_IRQHandler(void)
-{
  8001110:	b580      	push	{r7, lr}
  8001112:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN DMA1_Channel7_IRQn 0 */
-
-  /* USER CODE END DMA1_Channel7_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_i2c1_rx);
  8001114:	4802      	ldr	r0, [pc, #8]	@ (8001120 <DMA1_Channel7_IRQHandler+0x10>)
  8001116:	f000 fb2e 	bl	8001776 <HAL_DMA_IRQHandler>
-  /* USER CODE BEGIN DMA1_Channel7_IRQn 1 */
-
-  /* USER CODE END DMA1_Channel7_IRQn 1 */
-}
  800111a:	bf00      	nop
  800111c:	bd80      	pop	{r7, pc}
  800111e:	bf00      	nop
  8001120:	200000e8 	.word	0x200000e8
 
 08001124 <I2C1_EV_IRQHandler>:
-
-/**
-  * @brief This function handles I2C1 event interrupt.
-  */
-void I2C1_EV_IRQHandler(void)
-{
  8001124:	b580      	push	{r7, lr}
  8001126:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN I2C1_EV_IRQn 0 */
-
-  /* USER CODE END I2C1_EV_IRQn 0 */
-  HAL_I2C_EV_IRQHandler(&hi2c1);
  8001128:	4802      	ldr	r0, [pc, #8]	@ (8001134 <I2C1_EV_IRQHandler+0x10>)
  800112a:	f000 ff9b 	bl	8002064 <HAL_I2C_EV_IRQHandler>
-  /* USER CODE BEGIN I2C1_EV_IRQn 1 */
-
-  /* USER CODE END I2C1_EV_IRQn 1 */
-}
  800112e:	bf00      	nop
  8001130:	bd80      	pop	{r7, pc}
  8001132:	bf00      	nop
  8001134:	20000094 	.word	0x20000094
 
 08001138 <I2C1_ER_IRQHandler>:
-
-/**
-  * @brief This function handles I2C1 error interrupt.
-  */
-void I2C1_ER_IRQHandler(void)
-{
  8001138:	b580      	push	{r7, lr}
  800113a:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN I2C1_ER_IRQn 0 */
-
-  /* USER CODE END I2C1_ER_IRQn 0 */
-  HAL_I2C_ER_IRQHandler(&hi2c1);
  800113c:	4802      	ldr	r0, [pc, #8]	@ (8001148 <I2C1_ER_IRQHandler+0x10>)
  800113e:	f000 ffab 	bl	8002098 <HAL_I2C_ER_IRQHandler>
-  /* USER CODE BEGIN I2C1_ER_IRQn 1 */
-
-  /* USER CODE END I2C1_ER_IRQn 1 */
-}
  8001142:	bf00      	nop
  8001144:	bd80      	pop	{r7, pc}
  8001146:	bf00      	nop
  8001148:	20000094 	.word	0x20000094
 
 0800114c <_sbrk>:
- *
- * @param incr Memory size
- * @return Pointer to allocated memory
- */
-void *_sbrk(ptrdiff_t incr)
-{
  800114c:	b580      	push	{r7, lr}
  800114e:	b086      	sub	sp, #24
  8001150:	af00      	add	r7, sp, #0
  8001152:	6078      	str	r0, [r7, #4]
-  extern uint8_t _end; /* Symbol defined in the linker script */
-  extern uint8_t _estack; /* Symbol defined in the linker script */
-  extern uint32_t _Min_Stack_Size; /* Symbol defined in the linker script */
-  const uint32_t stack_limit = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
  8001154:	4a14      	ldr	r2, [pc, #80]	@ (80011a8 <_sbrk+0x5c>)
  8001156:	4b15      	ldr	r3, [pc, #84]	@ (80011ac <_sbrk+0x60>)
  8001158:	1ad3      	subs	r3, r2, r3
  800115a:	617b      	str	r3, [r7, #20]
-  const uint8_t *max_heap = (uint8_t *)stack_limit;
  800115c:	697b      	ldr	r3, [r7, #20]
  800115e:	613b      	str	r3, [r7, #16]
-  uint8_t *prev_heap_end;
-
-  /* Initialize heap end at first call */
-  if (NULL == __sbrk_heap_end)
  8001160:	4b13      	ldr	r3, [pc, #76]	@ (80011b0 <_sbrk+0x64>)
  8001162:	681b      	ldr	r3, [r3, #0]
  8001164:	2b00      	cmp	r3, #0
  8001166:	d102      	bne.n	800116e <_sbrk+0x22>
-  {
-    __sbrk_heap_end = &_end;
  8001168:	4b11      	ldr	r3, [pc, #68]	@ (80011b0 <_sbrk+0x64>)
  800116a:	4a12      	ldr	r2, [pc, #72]	@ (80011b4 <_sbrk+0x68>)
  800116c:	601a      	str	r2, [r3, #0]
-  }
-
-  /* Protect heap from growing into the reserved MSP stack */
-  if (__sbrk_heap_end + incr > max_heap)
  800116e:	4b10      	ldr	r3, [pc, #64]	@ (80011b0 <_sbrk+0x64>)
  8001170:	681a      	ldr	r2, [r3, #0]
  8001172:	687b      	ldr	r3, [r7, #4]
@@ -2720,32 +2093,22 @@ void *_sbrk(ptrdiff_t incr)
  8001176:	693a      	ldr	r2, [r7, #16]
  8001178:	429a      	cmp	r2, r3
  800117a:	d207      	bcs.n	800118c <_sbrk+0x40>
-  {
-    errno = ENOMEM;
  800117c:	f004 ffca 	bl	8006114 <__errno>
  8001180:	4603      	mov	r3, r0
  8001182:	220c      	movs	r2, #12
  8001184:	601a      	str	r2, [r3, #0]
-    return (void *)-1;
  8001186:	f04f 33ff 	mov.w	r3, #4294967295
  800118a:	e009      	b.n	80011a0 <_sbrk+0x54>
-  }
-
-  prev_heap_end = __sbrk_heap_end;
  800118c:	4b08      	ldr	r3, [pc, #32]	@ (80011b0 <_sbrk+0x64>)
  800118e:	681b      	ldr	r3, [r3, #0]
  8001190:	60fb      	str	r3, [r7, #12]
-  __sbrk_heap_end += incr;
  8001192:	4b07      	ldr	r3, [pc, #28]	@ (80011b0 <_sbrk+0x64>)
  8001194:	681a      	ldr	r2, [r3, #0]
  8001196:	687b      	ldr	r3, [r7, #4]
  8001198:	4413      	add	r3, r2
  800119a:	4a05      	ldr	r2, [pc, #20]	@ (80011b0 <_sbrk+0x64>)
  800119c:	6013      	str	r3, [r2, #0]
-
-  return (void *)prev_heap_end;
  800119e:	68fb      	ldr	r3, [r7, #12]
-}
  80011a0:	4618      	mov	r0, r3
  80011a2:	3718      	adds	r7, #24
  80011a4:	46bd      	mov	sp, r7
@@ -2756,27 +2119,13 @@ void *_sbrk(ptrdiff_t incr)
  80011b4:	20000378 	.word	0x20000378
 
 080011b8 <SystemInit>:
-  * @brief  Setup the microcontroller system.
-  * @retval None
-  */
-
-void SystemInit(void)
-{
  80011b8:	b480      	push	{r7}
  80011ba:	af00      	add	r7, sp, #0
-  SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET;
-#endif
-
-  /* FPU settings ------------------------------------------------------------*/
-#if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
-  SCB->CPACR |= ((3UL << 20U)|(3UL << 22U));  /* set CP10 and CP11 Full Access */
  80011bc:	4b06      	ldr	r3, [pc, #24]	@ (80011d8 <SystemInit+0x20>)
  80011be:	f8d3 3088 	ldr.w	r3, [r3, #136]	@ 0x88
  80011c2:	4a05      	ldr	r2, [pc, #20]	@ (80011d8 <SystemInit+0x20>)
  80011c4:	f443 0370 	orr.w	r3, r3, #15728640	@ 0xf00000
  80011c8:	f8c2 3088 	str.w	r3, [r2, #136]	@ 0x88
-#endif
-}
  80011cc:	bf00      	nop
  80011ce:	46bd      	mov	sp, r7
  80011d0:	f85d 7b04 	ldr.w	r7, [sp], #4
@@ -2785,108 +2134,48 @@ void SystemInit(void)
  80011d8:	e000ed00 	.word	0xe000ed00
 
 080011dc <Reset_Handler>:
-
-    .section	.text.Reset_Handler
-	.weak	Reset_Handler
-	.type	Reset_Handler, %function
-Reset_Handler:
-  ldr   sp, =_estack    /* Set stack pointer */
  80011dc:	f8df d034 	ldr.w	sp, [pc, #52]	@ 8001214 <LoopForever+0x2>
-
-/* Call the clock system initialization function.*/
-    bl  SystemInit
  80011e0:	f7ff ffea 	bl	80011b8 <SystemInit>
-
-/* Copy the data segment initializers from flash to SRAM */
-  ldr r0, =_sdata
  80011e4:	480c      	ldr	r0, [pc, #48]	@ (8001218 <LoopForever+0x6>)
-  ldr r1, =_edata
  80011e6:	490d      	ldr	r1, [pc, #52]	@ (800121c <LoopForever+0xa>)
-  ldr r2, =_sidata
  80011e8:	4a0d      	ldr	r2, [pc, #52]	@ (8001220 <LoopForever+0xe>)
-  movs r3, #0
  80011ea:	2300      	movs	r3, #0
-  b LoopCopyDataInit
  80011ec:	e002      	b.n	80011f4 <LoopCopyDataInit>
 
 080011ee <CopyDataInit>:
-
-CopyDataInit:
-  ldr r4, [r2, r3]
  80011ee:	58d4      	ldr	r4, [r2, r3]
-  str r4, [r0, r3]
  80011f0:	50c4      	str	r4, [r0, r3]
-  adds r3, r3, #4
  80011f2:	3304      	adds	r3, #4
 
 080011f4 <LoopCopyDataInit>:
-
-LoopCopyDataInit:
-  adds r4, r0, r3
  80011f4:	18c4      	adds	r4, r0, r3
-  cmp r4, r1
  80011f6:	428c      	cmp	r4, r1
-  bcc CopyDataInit
  80011f8:	d3f9      	bcc.n	80011ee <CopyDataInit>
-  
-/* Zero fill the bss segment. */
-  ldr r2, =_sbss
  80011fa:	4a0a      	ldr	r2, [pc, #40]	@ (8001224 <LoopForever+0x12>)
-  ldr r4, =_ebss
  80011fc:	4c0a      	ldr	r4, [pc, #40]	@ (8001228 <LoopForever+0x16>)
-  movs r3, #0
  80011fe:	2300      	movs	r3, #0
-  b LoopFillZerobss
  8001200:	e001      	b.n	8001206 <LoopFillZerobss>
 
 08001202 <FillZerobss>:
-
-FillZerobss:
-  str  r3, [r2]
  8001202:	6013      	str	r3, [r2, #0]
-  adds r2, r2, #4
  8001204:	3204      	adds	r2, #4
 
 08001206 <LoopFillZerobss>:
-
-LoopFillZerobss:
-  cmp r2, r4
  8001206:	42a2      	cmp	r2, r4
-  bcc FillZerobss
  8001208:	d3fb      	bcc.n	8001202 <FillZerobss>
-
-/* Call static constructors */
-    bl __libc_init_array
  800120a:	f004 ff89 	bl	8006120 <__libc_init_array>
-/* Call the application's entry point.*/
-	bl	main
  800120e:	f7ff fbed 	bl	80009ec <main>
 
 08001212 <LoopForever>:
-
-LoopForever:
-    b LoopForever
  8001212:	e7fe      	b.n	8001212 <LoopForever>
-  ldr   sp, =_estack    /* Set stack pointer */
  8001214:	2000c000 	.word	0x2000c000
-  ldr r0, =_sdata
  8001218:	20000000 	.word	0x20000000
-  ldr r1, =_edata
  800121c:	2000005c 	.word	0x2000005c
-  ldr r2, =_sidata
  8001220:	08006ab0 	.word	0x08006ab0
-  ldr r2, =_sbss
  8001224:	2000005c 	.word	0x2000005c
-  ldr r4, =_ebss
  8001228:	20000374 	.word	0x20000374
 
 0800122c <ADC1_IRQHandler>:
- * @retval : None
-*/
-    .section	.text.Default_Handler,"ax",%progbits
-Default_Handler:
-Infinite_Loop:
-	b	Infinite_Loop
  800122c:	e7fe      	b.n	800122c <ADC1_IRQHandler>
 
 0800122e <HAL_Init>:
