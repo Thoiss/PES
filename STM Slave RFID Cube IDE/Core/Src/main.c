@@ -374,10 +374,11 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
         // Verstuur ontvangen byte via UART
     	char buffer[20];
     	sprintf(buffer, "%d\r\n", pasID);
-        HAL_UART_Transmit(&huart2, buffer, 3, HAL_MAX_DELAY);
        char newline = '\n';
-       HAL_UART_Transmit(&huart2, (uint8_t*)&newline, 1, HAL_MAX_DELAY);
-       HAL_I2C_Slave_Transmit(&hi2c1, buffer, 1, 1000);
+       HAL_UART_Transmit(&huart2, (uint8_t*)&newline, 1, 1000);
+       HAL_I2C_Slave_Transmit(&hi2c1, buffer, 3, 1000);
+       HAL_UART_Transmit(&huart2, buffer, 3, 1000);
+
 
         // Start opnieuw met ontvangen voor de volgende byte
        HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);

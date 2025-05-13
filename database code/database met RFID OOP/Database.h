@@ -17,7 +17,10 @@ public:
     Database(const std::string& server, const std::string& user, const std::string& password, const std::string& database);
     ~Database();
     bool init();
-    bool schrijven(const std::string& card_uid, const std::string& device_id);
+    bool schrijvenrfid(const std::string& card_uid, const std::string& device_id);
+    bool bestaatRfid(const std::string& card_uid);
+    bool verwijderRfid(const std::string& card_uid);
+    bool lezenuser();
 
 };
 #endif

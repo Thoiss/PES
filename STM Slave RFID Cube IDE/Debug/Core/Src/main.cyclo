@@ -6,4 +6,4 @@
 ../Core/Src/main.c:315:13:MX_DMA_Init	1
 ../Core/Src/main.c:333:13:MX_GPIO_Init	1
 ../Core/Src/main.c:370:6:HAL_I2C_SlaveRxCpltCallback	2
-../Core/Src/main.c:392:6:Error_Handler	1
+../Core/Src/main.c:393:6:Error_Handler	1
