@@ -59,6 +59,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define Knop_Pin GPIO_PIN_4
 #define Knop_GPIO_Port GPIOA
+#define EncoderButton_Pin GPIO_PIN_8
+#define EncoderButton_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

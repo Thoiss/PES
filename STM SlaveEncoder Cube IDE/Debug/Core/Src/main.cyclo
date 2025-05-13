@@ -4,5 +4,5 @@
 ../Core/Src/main.c:266:13:MX_TIM2_Init	3
 ../Core/Src/main.c:315:13:MX_USART2_UART_Init	2
 ../Core/Src/main.c:350:13:MX_GPIO_Init	1
-../Core/Src/main.c:371:6:HAL_I2C_SlaveRxCpltCallback	2
-../Core/Src/main.c:388:6:Error_Handler	1
+../Core/Src/main.c:377:6:HAL_I2C_SlaveRxCpltCallback	2
+../Core/Src/main.c:394:6:Error_Handler	1
