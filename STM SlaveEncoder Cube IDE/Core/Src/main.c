@@ -54,6 +54,7 @@ uint32_t delay = 200;
 uint8_t RX_Buffer[1]; // DATA to receive
 int encoderDirection = 0;
 uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
+uint8_t servoKnop = 0;
 char tekstbuffer[50];
 typedef struct {
     uint8_t knop;
@@ -122,6 +123,8 @@ int main(void)
 	    knopStatus = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin); // Lees de knopstatus (0 of 1)
 	    rawCounter = __HAL_TIM_GET_COUNTER(&htim2);
 
+	    servoKnop = !HAL_GPIO_ReadPin(servoKnop_GPIO_Port, servoKnop_Pin); // Lees de encoderbuton status (0 of 1)
+
 //	    if (HAL_I2C_Slave_Receive(&hi2c1, &RX_Buffer, 1, 1000) == HAL_OK) {
 //	        if (RX_Buffer[0] == 1) {
 //	            // Verstuur eerst de knopstatus
@@ -136,7 +139,7 @@ int main(void)
 //	    }
 //
 //	    // Stuur een tekstbericht via UART voor debugging
-	    snprintf(tekstbuffer, sizeof(tekstbuffer), "Knop: %d, Positie: %ld\r\n", knopStatus, rawCounter);
+	    snprintf(tekstbuffer, sizeof(tekstbuffer), "Knop: %d, Positie: %ld ServoKnop: %d\r\n", knopStatus, rawCounter, servoKnop);
 	    HAL_UART_Transmit(&huart2, (uint8_t*) tekstbuffer, strlen(tekstbuffer), HAL_MAX_DELAY);
 
 
@@ -363,11 +366,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(Knop_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : EncoderButton_Pin */
-  GPIO_InitStruct.Pin = EncoderButton_Pin;
+  /*Configure GPIO pin : servoKnop_Pin */
+  GPIO_InitStruct.Pin = servoKnop_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(EncoderButton_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(servoKnop_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
