@@ -28,7 +28,8 @@ bool Database::init() {
     return true;
 }
 
-bool Database::schrijven(const std::string& card_uid, const std::string& device_id) {
+bool Database::schrijvenrfid(const std::string& card_uid, const std::string& naam) {
+    
     if (!conn) {
         std::cerr << "Database not initialized.\n";
         return false;
@@ -36,8 +37,8 @@ bool Database::schrijven(const std::string& card_uid, const std::string& device_
 
     char query[512];
     snprintf(query, sizeof(query),
-             "INSERT INTO rfid_logs (card_uid, device_id) VALUES('%s', '%s')",
-             card_uid.c_str(), device_id.c_str());
+             "INSERT INTO rfid_logs (card_uid, naam) VALUES('%s', '%s')",
+             card_uid.c_str(), naam.c_str());
 
     if (mysql_query(conn, query)) {
         std::cerr << "INSERT failed: " << mysql_error(conn) << std::endl;
@@ -45,5 +46,58 @@ bool Database::schrijven(const std::string& card_uid, const std::string& device_
     }
 
     std::cout << "RFID-gegevens succesvol toegevoegd!" << std::endl;
+    return true;
+}
+
+bool Database::bestaatRfid(const std::string& card_uid) {
+    if (!conn) {
+        std::cerr << "Database niet geïnitialiseerd.\n";
+        return false;
+    }
+
+    char query[256];
+    snprintf(query, sizeof(query),
+             "SELECT 1 FROM rfid_logs WHERE card_uid = '%s' LIMIT 1",
+             card_uid.c_str());
+
+    if (mysql_query(conn, query)) {
+        std::cerr << "SELECT query mislukt: " << mysql_error(conn) << std::endl;
+        return false;
+    }
+
+    MYSQL_RES* result = mysql_store_result(conn);
+    if (!result) {
+        std::cerr << "Resultaat ophalen mislukt: " << mysql_error(conn) << std::endl;
+        return false;
+    }
+
+    bool exists = mysql_num_rows(result) > 0;
+    mysql_free_result(result);
+    
+    return exists;
+}
+
+bool Database::verwijderRfid(const std::string& card_uid) {
+    if (!conn) {
+        std::cerr << "Database niet geïnitialiseerd.\n";
+        return false;
+    }
+
+    char query[256];
+    snprintf(query, sizeof(query),
+             "DELETE FROM rfid_logs WHERE card_uid = '%s'",
+             card_uid.c_str());
+
+    if (mysql_query(conn, query)) {
+        std::cerr << "DELETE query mislukt: " << mysql_error(conn) << std::endl;
+        return false;
+    }
+
+    if (mysql_affected_rows(conn) == 0) {
+        std::cout << "Geen rijen verwijderd. UID bestaat mogelijk niet.\n";
+        return false;
+    }
+
+    std::cout << "UID succesvol verwijderd.\n";
     return true;
 }

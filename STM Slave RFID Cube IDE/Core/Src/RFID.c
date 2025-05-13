@@ -18,7 +18,7 @@ if (status == MI_OK) {
 	status = MFRC522_Anticoll(str);
 	memcpy(sNum, str, 5);
 	HAL_Delay(200);
-waarde = sNum[0] + sNum[1] + sNum[2] + sNum[3] + sNum[4];
+waarde = sNum[1] + sNum[3] + sNum[5] + sNum[2];
 	  	}
 	  	 return waarde;
 }
