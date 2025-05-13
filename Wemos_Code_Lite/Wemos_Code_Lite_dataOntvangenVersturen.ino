@@ -68,13 +68,14 @@ void dataOntvangenVersturen() {
           int preset = numString.toInt();
           Serial.print("Ontvangen preset: ");
           Serial.println(preset);
-          switch (preset) {
-            case 0: setRGBColor(0, 0, 0); continue;
-            case 1: setRGBColor(255, 50, 50); continue;
-            case 2: setRGBColor(50, 255, 50); continue;
-            case 3: setRGBColor(50, 50, 255); continue;
-            default: Serial.println("Ongeldige preset ontvangen!"); continue;
-          }
+          // switch (preset) {
+          //   case 0: setRGBColor(0, 0, 0); continue;
+          //   case 1: setRGBColor(255, 255, 255); continue;
+          //   case 2: setRGBColor(150, 150, 150); continue;
+          //   case 3: setRGBColor(50, 50, 50); continue;
+          //   default: Serial.println("Ongeldige preset ontvangen!"); continue;
+          // }
+          setRGBColor(preset,preset,preset);
         }
       }
     }
