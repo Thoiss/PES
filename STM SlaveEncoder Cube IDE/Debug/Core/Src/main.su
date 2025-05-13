@@ -1,8 +1,10 @@
 ../Core/Src/main.c:87:5:main	16	static
-../Core/Src/main.c:160:6:SystemClock_Config	96	static
-../Core/Src/main.c:221:13:MX_I2C1_Init	8	static
-../Core/Src/main.c:269:13:MX_TIM2_Init	56	static
-../Core/Src/main.c:318:13:MX_USART2_UART_Init	8	static
-../Core/Src/main.c:353:13:MX_GPIO_Init	40	static
-../Core/Src/main.c:380:6:HAL_I2C_SlaveRxCpltCallback	16	static
-../Core/Src/main.c:397:6:Error_Handler	4	static,ignoring_inline_asm
+../Core/Src/main.c:163:6:SystemClock_Config	96	static
+../Core/Src/main.c:224:13:MX_I2C1_Init	8	static
+../Core/Src/main.c:272:13:MX_TIM2_Init	56	static
+../Core/Src/main.c:321:13:MX_USART2_UART_Init	8	static
+../Core/Src/main.c:356:13:MX_GPIO_Init	40	static
+../Core/Src/main.c:383:6:HAL_I2C_SlaveRxCpltCallback	16	static
+../Core/Src/main.c:395:6:HAL_I2C_ListenCpltCallback	16	static
+../Core/Src/main.c:398:6:HAL_I2C_AddrCallback	16	static
+../Core/Src/main.c:413:6:Error_Handler	4	static,ignoring_inline_asm

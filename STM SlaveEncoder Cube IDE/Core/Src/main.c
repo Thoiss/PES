@@ -115,6 +115,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
+	if (HAL_I2C_EnableListen_IT(&hi2c1) !=HAL_OK){
+		Error_Handler();
+	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -382,11 +385,24 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
     if (hi2c->Instance == I2C1)  // check of het de juiste I2C is
     {
         // Verstuur ontvangen byte via UART
-    	HAL_I2C_Slave_Transmit(&hi2c1, "Hoi\n", 1, 1000);
-    	HAL_UART_Transmit(&huart2, "In Interrupt\n", "In Interrupt\n", HAL_MAX_DELAY);
+//    	HAL_I2C_Slave_Transmit(&hi2c1, (uint8_t*)"Hoi\n", 4, 1000);
+    	HAL_UART_Transmit(&huart2, (uint8_t*)"In Interrupt\n", strlen("In Interrupt\n"), HAL_MAX_DELAY);
+
         // Start opnieuw met ontvangen voor de volgende byte
-       HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
+//       HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
     }
+}
+void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c){
+	HAL_I2C_EnableListen_IT(hi2c);
+}
+void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode){
+	if(TransferDirection == I2C_DIRECTION_TRANSMIT){
+		HAL_I2C_Slave_Sequential_Receive_IT(hi2c, 6,  6, I2C_FIRST_AND_LAST_FRAME);
+	}
+	else{
+		Error_Handler();
+	}
+
 }
 /* USER CODE END 4 */
 
