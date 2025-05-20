@@ -71,6 +71,9 @@ int PiConnection::handlePiConnection()
     }
     memset(buffer, 0, sizeof(buffer));
     send(pi_a_socket, PiStatus, strlen(PiStatus), 0);
+    // ____________________________________________
+    sleep(2); // DEZE MOGELIJK ANDERS IMPLEMENTEREN
+    // ____________________________________________
     int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
     buffer[valread] = '\0';
 
