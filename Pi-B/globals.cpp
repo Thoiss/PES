@@ -3,7 +3,7 @@
 // IP-adressen
 const char *wemos_ips[Devices] = {
      "192.168.137.20", // Wemos 1
-     "192.168.137.30"  // Wemos 2
+     "192.168.137.30",  // Wemos 2
      "192.168.137.40" // Wemos 3
 };
 const char *pi_a_ip = "192.168.137.46"; // Raspberry Pi A
