@@ -57,6 +57,9 @@ UART_HandleTypeDef huart2;
 int pasID = 0;
 uint8_t RX_Buffer [1] ;
 char buffer[20];
+int check = 0;
+
+int waarde = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -128,13 +131,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  if (check == 0) {
 	  pasID = scanPas();
-	  HAL_Delay(500);
+	  }
+	//  HAL_Delay(500);
 
-	  if (pasID > 0)
+	  if ((pasID > 0))
 	      {
 	          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4 | LED1_Pin, GPIO_PIN_SET);
 	          ledAan = true;
+	          waarde = pasID;
+	          pasID =0;
+	          check = 1;
 	          __HAL_TIM_SET_COUNTER(&htim2, 0);  // Reset timer
 	          HAL_TIM_Base_Start_IT(&htim2);     // Start timer
 	      }
@@ -435,11 +443,13 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
     {
         // Verstuur ontvangen byte via UART
     	char buffer[20];
-    	sprintf(buffer, "%d\r\n", pasID);
+    	sprintf(buffer, "%d\r\n", waarde);
        char newline = '\n';
        HAL_UART_Transmit(&huart2, (uint8_t*)&newline, 1, 1000);
        HAL_I2C_Slave_Transmit(&hi2c1, buffer, 3, 1000);
        HAL_UART_Transmit(&huart2, buffer, 3, 1000);
+
+    	   waarde = 0;
 
         // Start opnieuw met ontvangen voor de volgende byte
        HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
@@ -454,6 +464,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4 | LED1_Pin, GPIO_PIN_RESET);
             ledAan = false;
             HAL_TIM_Base_Stop_IT(&htim2);  // Stop de timer na 1x
+            check = 0;
         }
     }
 }
