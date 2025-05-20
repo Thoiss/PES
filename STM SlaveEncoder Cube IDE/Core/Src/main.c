@@ -41,6 +41,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
+DMA_HandleTypeDef hdma_i2c1_rx;
 
 TIM_HandleTypeDef htim2;
 
@@ -48,10 +49,8 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 uint32_t rawCounter = 0;
-uint32_t counter = 0;
 uint32_t last_Counter = 0;
 uint32_t delay = 200;
-uint8_t RX_Buffer[1]; // DATA to receive
 int encoderDirection = 0;
 uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
 uint8_t servoKnop = 0;
@@ -68,6 +67,7 @@ EncoderData encData;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
@@ -109,15 +109,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
-	if (HAL_I2C_EnableListen_IT(&hi2c1) !=HAL_OK){
-		Error_Handler();
-	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -349,6 +347,22 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -363,47 +377,31 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
-  /*Configure GPIO pin : Knop_Pin */
-  GPIO_InitStruct.Pin = Knop_Pin;
+  /*Configure GPIO pins : Knop_Pin servoKnop_Pin */
+  GPIO_InitStruct.Pin = Knop_Pin|servoKnop_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(Knop_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : servoKnop_Pin */
-  GPIO_InitStruct.Pin = servoKnop_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(servoKnop_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-    if (hi2c->Instance == I2C1)  // check of het de juiste I2C is
-    {
-        // Verstuur ontvangen byte via UART
-//    	HAL_I2C_Slave_Transmit(&hi2c1, (uint8_t*)"Hoi\n", 4, 1000);
-    	HAL_UART_Transmit(&huart2, (uint8_t*)"In Interrupt\n", strlen("In Interrupt\n"), HAL_MAX_DELAY);
+//void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
+//{
+//    if (hi2c->Instance == I2C1)  // check of het de juiste I2C is
+//    {
+//        // Verstuur ontvangen byte via UART
+////    	HAL_I2C_Slave_Transmit(&hi2c1, (uint8_t*)"Hoi\n", 4, 1000);
+//    	HAL_UART_Transmit(&huart2, (uint8_t*)"In Interrupt\n", strlen("In Interrupt\n"), HAL_MAX_DELAY);
+//
+//        // Start opnieuw met ontvangen voor de volgende byte
+////       HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
+//    }
+//}
 
-        // Start opnieuw met ontvangen voor de volgende byte
-//       HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
-    }
-}
-void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c){
-	HAL_I2C_EnableListen_IT(hi2c);
-}
-void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode){
-	if(TransferDirection == I2C_DIRECTION_TRANSMIT){
-		HAL_I2C_Slave_Sequential_Receive_IT(hi2c, 6,  6, I2C_FIRST_AND_LAST_FRAME);
-	}
-	else{
-		Error_Handler();
-	}
 
-}
 /* USER CODE END 4 */
 
 /**
