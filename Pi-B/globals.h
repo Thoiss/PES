@@ -16,7 +16,7 @@
 #define PORT      8888   // Wemos port
 #define PI_A_PORT 8080   // Pi-A port
 #define TIMEOUT   3      // Timeout in seconden
-#define Devices   2      // Aantal Wemos apparaten
+#define Devices   3      // Aantal Wemos apparaten
 
 // IP-adressen van de Wemos-apparaten
 extern const char *wemos_ips[Devices];
