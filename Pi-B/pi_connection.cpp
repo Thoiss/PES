@@ -13,10 +13,9 @@ int PiConnection::connectToPi(const char* ip, int port)
 {
     int sock;
     struct sockaddr_in local_addr;
-
+    
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-
         return -1;
     }
 
@@ -48,18 +47,23 @@ int PiConnection::connectToPi(const char* ip, int port)
             getsockopt(sock, SOL_SOCKET, SO_ERROR, &so_error, &len);
             if (so_error == 0)
             {
+                pi_a_socket = sock;
                 return sock;
             }
         }
         close(sock);
         return -1;
-    }
-
+    }        
+    pi_a_socket = sock;
     return sock;
 }
 
 int PiConnection::handlePiConnection()
 {
+    if (pi_a_socket <= 0) {
+        return -1;
+    }
+
     const char* PiLed    = "LED";
     const char* PiStatus = "Status";
 
@@ -71,9 +75,7 @@ int PiConnection::handlePiConnection()
     }
     memset(buffer, 0, sizeof(buffer));
     send(pi_a_socket, PiStatus, strlen(PiStatus), 0);
-    // ____________________________________________
-    sleep(2); // DEZE MOGELIJK ANDERS IMPLEMENTEREN
-    // ____________________________________________
+
     int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
     buffer[valread] = '\0';
 

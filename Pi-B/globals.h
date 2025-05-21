@@ -25,7 +25,7 @@ extern const char *pi_a_ip;
 
 // Voor connecties
 extern struct sockaddr_in serv_addr;
-extern int pi_a_socket;
+
 
 // Leesbuffer
 extern char buffer[1024];

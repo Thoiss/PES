@@ -13,10 +13,11 @@
 
 class PiConnection {
 public:
-
     int connectToPi(const char* ip, int port);
 
 
     int handlePiConnection();
+private:
+    int pi_a_socket = 0;    
 };
 #endif

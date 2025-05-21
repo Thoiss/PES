@@ -10,23 +10,29 @@
 
 int main()
 {
+    
     int Socket[Devices] = {0};
     
     WemosAansturen aanstuurder;
 
     // Eerst Pi-A verbinden
     PiConnection piConn;
-    pi_a_socket = piConn.connectToPi(pi_a_ip, PI_A_PORT);
-    int tellerPerformance =0;
-    int i = 0;
+    printf("Verbind met Pi-A...\n");
     while (1)
     {
+    int status = piConn.connectToPi(pi_a_ip, PI_A_PORT);
+    printf("Resultaat verbinding: %d\n", status);
+    int tellerPerformance =0;
+
+
+        int i = 0;
         // Haal status van Pi-A op en stuur LED-bericht indien nodig
         piConn.handlePiConnection();
+        sleep(2); // tijdelijk toegevoegd om overload aan status berichten te voorkomen
+        
         // Verbind met alle Wemos-apparaten
         while (i < Devices)
         {
-            
             WemosConnection wemosConn;
             Socket[i] = wemosConn.connectToWemos(wemos_ips[i]);
             printf("socket = %d\n", Socket[i]);
