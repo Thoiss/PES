@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,20 +47,14 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint32_t rawCounter = 0;
-uint32_t counter = 0;
-uint32_t last_Counter = 0;
-uint32_t delay = 200;
-uint8_t RX_Buffer[1]; // DATA to receive
-int encoderDirection = 0;
-uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
+uint8_t RX_Buffer [1] ;
+char buffer[20];
 char tekstbuffer[50];
-typedef struct {
-    uint8_t knop;
-    uint32_t teller;
-} EncoderData;
-
-EncoderData encData;
+char Test[] = "test\n";
+uint32_t rawCounter = 0;
+uint32_t delay = 200;
+uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
+uint8_t servoKnop = 0;
 
 /* USER CODE END PV */
 
@@ -119,33 +113,18 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-	    knopStatus = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin); // Lees de knopstatus (0 of 1)
-	    rawCounter = __HAL_TIM_GET_COUNTER(&htim2);
+		rawCounter = counterLezen();
+		if(knopStatus == 0){
+		knopStatus = encoderKnopLezen();
+		}
 
-//	    if (HAL_I2C_Slave_Receive(&hi2c1, &RX_Buffer, 1, 1000) == HAL_OK) {
-//	        if (RX_Buffer[0] == 1) {
-//	            // Verstuur eerst de knopstatus
-//	            HAL_I2C_Slave_Transmit(&hi2c1, &knopStatus, 1, 1000);
-//	            HAL_UART_Transmit(&huart2, "Test\n", "Test\n", HAL_MAX_DELAY);
-//	            // Verstuur daarna de teller waarde
-////	            HAL_I2C_Slave_Transmit(&hi2c1, (uint8_t*)&rawCounter, sizeof(rawCounter), 1000);
-//
-//	            // Verstuur ook via UART
-//	            HAL_UART_Transmit(&huart2, (uint8_t*)&encData, sizeof(encData), HAL_MAX_DELAY);
-//	        }
-//	    }
-//
-//	    // Stuur een tekstbericht via UART voor debugging
-	    snprintf(tekstbuffer, sizeof(tekstbuffer), "Knop: %d, Positie: %ld\r\n", knopStatus, rawCounter);
-	    HAL_UART_Transmit(&huart2, (uint8_t*) tekstbuffer, strlen(tekstbuffer), HAL_MAX_DELAY);
-
-
-//	  		HAL_UART_Transmit(&huart2, (uint8_t*)tekstbuffer, strlen(tekstbuffer), HAL_MAX_DELAY);
+		if(servoKnop == 0){
+		servoKnop = servoKnopLezen();
+		}
+		  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  		HAL_Delay(500);
-	}
 
   /* USER CODE END 3 */
 }
@@ -363,11 +342,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(Knop_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : EncoderButton_Pin */
-  GPIO_InitStruct.Pin = EncoderButton_Pin;
+  /*Configure GPIO pin : servoKnop_Pin */
+  GPIO_InitStruct.Pin = servoKnop_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(EncoderButton_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(servoKnop_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -378,11 +357,61 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
     if (hi2c->Instance == I2C1)  // check of het de juiste I2C is
     {
-        // Verstuur ontvangen byte via UART
-    	HAL_I2C_Slave_Transmit(&hi2c1, "Hoi\n", 1, 1000);
-    	HAL_UART_Transmit(&huart2, "In Interrupt\n", "In Interrupt\n", HAL_MAX_DELAY);
-        // Start opnieuw met ontvangen voor de volgende byte
-       HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
+    		char bufferraw[20];
+  	  snprintf(tekstbuffer, sizeof(tekstbuffer), "Knop: %d, Positie: %ld ServoKnop: %d\r\n", knopStatus, rawCounter, servoKnop);
+  	  HAL_UART_Transmit(&huart2, (uint8_t*) tekstbuffer, strlen(tekstbuffer), 1000);
+
+if(RX_Buffer [0]== 1){
+  	uint8_t data[4] = {
+  	            (uint8_t)( rawCounter        & 0xFF),        // laagste byte
+  	            (uint8_t)((rawCounter >> 8)  & 0xFF),
+  	            (uint8_t)((rawCounter >> 16) & 0xFF),
+  	            (uint8_t)((rawCounter >> 24) & 0xFF)         // hoogste byte
+  	        };
+
+  	        uint8_t commando = RX_Buffer[0];
+
+  	        // Check welk byte de master wil (1..4)
+  	        if (commando >= 1 && commando <= 4)
+  	        {
+  	            // stuur de gevraagde byte terug
+  	            HAL_I2C_Slave_Transmit_IT(&hi2c1, &data[commando - 1], 1);
+  	        }
+
+}
+else if(RX_Buffer [0]== 2){
+
+  	        uint8_t commando = RX_Buffer[0];
+
+  	        // Check welk byte de master wil (1..4)
+  	        if (commando >= 1 && commando <= 4)
+  	        {
+  	            // stuur de gevraagde byte terug
+  	            HAL_I2C_Slave_Transmit_IT(&hi2c1, &knopStatus, 1);
+  	          knopStatus =0;
+  	        }
+
+}
+else if(RX_Buffer [0]== 3){
+
+  	        uint8_t commando = RX_Buffer[0];
+
+  	        // Check welk byte de master wil (1..4)
+  	        if (commando >= 1 && commando <= 4)
+  	        {
+  	            // stuur de gevraagde byte terug
+  	            HAL_I2C_Slave_Transmit_IT(&hi2c1, &servoKnop, 1);
+  	          servoKnop = 0;
+  	        }
+
+}
+    HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
+}
+}
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+    if (hi2c->Instance == I2C1) {
+        HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
     }
 }
 /* USER CODE END 4 */
