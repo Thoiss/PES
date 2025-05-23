@@ -41,6 +41,6 @@ int WemosConnection::connectToWemos(const char* ip) {
     struct timeval tv = { .tv_sec = 0, .tv_usec = 1500000 };
     select(sock + 1, NULL, &wfds, NULL, &tv);
 
-    printf("Verbonden met %d Wemos op %s\n", sock, ip);
+    printf("Verbonden met Wemos op %s\n", ip);
     return sock;
 }

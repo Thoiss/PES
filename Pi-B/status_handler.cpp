@@ -67,14 +67,14 @@ int StatusHandler::vraagKnopStatus() // Send request to Wemos for button status
         send(socket_, "PILED_ACK\n", strlen("PILED_ACK\n"), 0);
         PiWaarde_Knop = 1;
     }
-
-    token = strtok(nullptr, " ");  // Next part of the response
-    if (token != nullptr && (strcmp(token, "1") == 0 || strcmp(token, "2") == 0 || strcmp(token, "3") == 0)) {
-        RGBWaarde = atoi(token);  // Convert to integer
-        send(socket_, "RGB_ACK\n", strlen("RGB_ACK\n"), 0);
-        printf("RGBWaarde: %d\n", RGBWaarde);
-        Versturen = true;
-    }
+// Oud wemos RGB waarde met cases 
+    // token = strtok(nullptr, " ");  // Next part of the response
+    // if (token != nullptr && (strcmp(token, "1") == 0 || strcmp(token, "2") == 0 || strcmp(token, "3") == 0)) {
+    //     RGBWaarde = atoi(token);  // Convert to integer
+    //     send(socket_, "RGB_ACK\n", strlen("RGB_ACK\n"), 0);
+    //     printf("RGBWaarde: %d\n", RGBWaarde);
+    //     Versturen = true;
+    // }
 
     token = strtok(nullptr, " ");  // Last part of the response
     deviceNaam = token;  // Assign device name
