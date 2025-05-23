@@ -81,7 +81,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+//	HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -388,6 +388,7 @@ else if(RX_Buffer [0]== 2){
   	        {
   	            // stuur de gevraagde byte terug
   	            HAL_I2C_Slave_Transmit_IT(&hi2c1, &knopStatus, 1);
+//  	          HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
   	          knopStatus =0;
   	        }
 

@@ -1263,6 +1263,7 @@ else if(RX_Buffer [0]== 2){
  8000a22:	4915      	ldr	r1, [pc, #84]	@ (8000a78 <HAL_I2C_SlaveRxCpltCallback+0x11c>)
  8000a24:	481b      	ldr	r0, [pc, #108]	@ (8000a94 <HAL_I2C_SlaveRxCpltCallback+0x138>)
  8000a26:	f000 fe21 	bl	800166c <HAL_I2C_Slave_Transmit_IT>
+//  	          HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
   	          knopStatus =0;
  8000a2a:	4b13      	ldr	r3, [pc, #76]	@ (8000a78 <HAL_I2C_SlaveRxCpltCallback+0x11c>)
  8000a2c:	2200      	movs	r2, #0
