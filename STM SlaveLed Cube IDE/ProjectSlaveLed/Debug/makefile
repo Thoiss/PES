@@ -60,8 +60,8 @@ all: main-build
 main-build: ProjectSlaveLed.elf secondary-outputs
 
 # Tool invocations
-ProjectSlaveLed.elf ProjectSlaveLed.map: $(OBJS) $(USER_OBJS) C:\Users\visha\Documents\GitHub\PES\STM\ SlaveLed\ Cube\ IDE\ProjectSlaveLed\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "ProjectSlaveLed.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\visha\Documents\GitHub\PES\STM SlaveLed Cube IDE\ProjectSlaveLed\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ProjectSlaveLed.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+ProjectSlaveLed.elf ProjectSlaveLed.map: $(OBJS) $(USER_OBJS) C:\Users\Thijs\STM32CubeIDE\workspace_1.17.0\ProjectSlaveLed\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "ProjectSlaveLed.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Thijs\STM32CubeIDE\workspace_1.17.0\ProjectSlaveLed\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ProjectSlaveLed.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

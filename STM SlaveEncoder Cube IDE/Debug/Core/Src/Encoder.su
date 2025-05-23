@@ -1,3 +1,0 @@
-../Core/Src/Encoder.c:3:5:counterLezen	16	static
-../Core/Src/Encoder.c:18:5:encoderKnopLezen	8	static
-../Core/Src/Encoder.c:22:5:servoKnopLezen	8	static

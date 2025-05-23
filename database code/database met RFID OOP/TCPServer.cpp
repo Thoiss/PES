@@ -8,8 +8,8 @@
 #include <iostream>
 #include <algorithm>
 
-TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave &s2)
-    : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2) {}
+TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave &s2, Slave &s3)
+    : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2), s3(s3) {}
 
 void TCPServer::setupSocket() {
     server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -49,6 +49,9 @@ void TCPServer::run() {
 
     while (true) {
         verwerkKaart();
+        verlichting();
+        int personen = db.tellerUniekePersonen();
+        std::cout << "personen: " << personen <<"\n";
         fd_set readfds;
         FD_ZERO(&readfds);
         FD_SET(server_fd_, &readfds);
@@ -139,7 +142,14 @@ void TCPServer::handleClientMessage(int client_fd, const std::string& message) {
 void TCPServer::sendMessage(int client_fd, const std::string& message) {
     send(client_fd, message.c_str(), message.length(), 0);
 }
-
+void TCPServer::verlichting(){
+    s3.schrijfCommando(1);
+    int verlichtingStatus = s3.leesKaart();
+    s3.schrijfCommando(2);
+    int verlichtingHelderheid = s3.leesKaart();
+    std::cout << "Verlichting status: " << verlichtingStatus << std::endl;
+    std::cout << "Verlichting helderheid: " << verlichtingHelderheid << std::endl;
+}
 void TCPServer::verwerkKaart() {
     s1.schrijfCommando(1);  // commando 1 om kaart te lezen
     int pasID = s1.leesKaart();
