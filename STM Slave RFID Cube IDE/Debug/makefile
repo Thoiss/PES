@@ -60,8 +60,8 @@ all: main-build
 main-build: SlaveRFID.elf secondary-outputs
 
 # Tool invocations
-SlaveRFID.elf SlaveRFID.map: $(OBJS) $(USER_OBJS) C:\Users\visha\Documents\GitHub\PES\STM\ Slave\ RFID\ Cube\ IDE\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "SlaveRFID.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\visha\Documents\GitHub\PES\STM Slave RFID Cube IDE\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SlaveRFID.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+SlaveRFID.elf SlaveRFID.map: $(OBJS) $(USER_OBJS) C:\Users\Julian\ van\ Kleef\Downloads\PES-11540722fd9da32a8db6ebd7d54f1a64533a7e1f\PES-11540722fd9da32a8db6ebd7d54f1a64533a7e1f\STM\ Slave\ RFID\ Cube\ IDE\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "SlaveRFID.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Julian van Kleef\Downloads\PES-11540722fd9da32a8db6ebd7d54f1a64533a7e1f\PES-11540722fd9da32a8db6ebd7d54f1a64533a7e1f\STM Slave RFID Cube IDE\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SlaveRFID.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

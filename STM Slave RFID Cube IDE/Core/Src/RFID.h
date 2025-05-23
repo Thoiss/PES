@@ -9,6 +9,7 @@
 extern SPI_HandleTypeDef hspi1;
 extern UART_HandleTypeDef huart2;
 
+
 int scanPas();
 
 
