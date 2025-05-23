@@ -60,21 +60,14 @@ void dataOntvangenVersturen() {
         clients[i] = WiFiClient();
       }
 
-      // RGBWAARDE preset
-      if (data.indexOf("RGBWAARDE") != -1) {
+      // RGBWAARDE 
+      else if (data.indexOf("RGBWAARDE") != -1) {
         int dashIndex = data.indexOf(" - ");
         if (dashIndex != -1) {
           String numString = data.substring(0, dashIndex);
           int preset = numString.toInt();
           Serial.print("Ontvangen preset: ");
           Serial.println(preset);
-          // switch (preset) {
-          //   case 0: setRGBColor(0, 0, 0); continue;
-          //   case 1: setRGBColor(255, 255, 255); continue;
-          //   case 2: setRGBColor(150, 150, 150); continue;
-          //   case 3: setRGBColor(50, 50, 50); continue;
-          //   default: Serial.println("Ongeldige preset ontvangen!"); continue;
-          // }
           setRGBColor(preset,preset,preset);
         }
       }
