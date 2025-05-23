@@ -24,6 +24,7 @@
 #include "MFRC522.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "RFID.h"
 /* USER CODE END Includes */
 
@@ -48,10 +49,13 @@ DMA_HandleTypeDef hdma_i2c1_rx;
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-int pasID = 0;
+uint32_t pasID = 0;
+uint32_t pasIDbuf = 0;
 uint8_t RX_Buffer [1] ;
 char buffer[20];
 /* USER CODE END PV */
@@ -63,13 +67,14 @@ static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+volatile bool ledAan = false;
 /* USER CODE END 0 */
 
 /**
@@ -105,9 +110,13 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   MFRC522_Init();
-  HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);  // Zet de slave in ontvangstmodus
+   HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);  // Zet de slave in ontvangstmodus
+  __HAL_TIM_SET_COUNTER(&htim2, 0);  // Reset timer
+  HAL_TIM_Base_Start_IT(&htim2);     // Start timer
+  HAL_NVIC_SetPriority(TIM2_IRQn, 5, 0); // Stel een lagere prioriteit in voor de timer interrupt
  // HAL_I2C_Slave_Transmit_IT(&hi2c1 ,(uint8_t *)RX_Buffer, 1); //Receiving in Interrupt mode
 
 
@@ -115,13 +124,19 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
-    /* USER CODE END WHILE */
+          pasID = scanPas();
 
-    /* USER CODE BEGIN 3 */
-	  pasID = scanPas();
-	  HAL_Delay(500);
+          if (pasID > 0) {
+        	  	 pasIDbuf = pasID;
+        	  	 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4 | LED1_Pin, GPIO_PIN_SET);
+        	  	 ledAan = true;
+
+        	  	__HAL_TIM_SET_COUNTER(&htim2, 0);  // Reset timer
+        	  	HAL_TIM_Base_Start_IT(&htim2);     // Start timer
+          }
   }
   /* USER CODE END 3 */
 }
@@ -275,6 +290,51 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 7999;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4999;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -342,13 +402,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|LED1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|LD3_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PA4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  /*Configure GPIO pins : PA4 LED1_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|LED1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -371,17 +431,46 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
     if (hi2c->Instance == I2C1)  // check of het de juiste I2C is
     {
-        // Verstuur ontvangen byte via UART
-    	char buffer[20];
-    	sprintf(buffer, "%d\r\n", pasID);
-       char newline = '\n';
-       HAL_UART_Transmit(&huart2, (uint8_t*)&newline, 1, 1000);
-       HAL_I2C_Slave_Transmit(&hi2c1, buffer, 3, 1000);
-       HAL_UART_Transmit(&huart2, buffer, 3, 1000);
+       uint8_t data[4];
+       data[0] = (uint8_t)(pasIDbuf & 0xFF);
+       data[1] = (uint8_t)((pasIDbuf >> 8) & 0xFF);
+       data[2] = (uint8_t)((pasIDbuf >> 16) & 0xFF);
+       data[3] = (uint8_t)((pasIDbuf >> 24) & 0xFF);
+
+       // Stuur de 4 bytes via I2C
+       HAL_I2C_Slave_Transmit(&hi2c1, data, 4, 1000);
+
+    //   HAL_I2C_Slave_Transmit(&hi2c1, buffer, 3, 1000);
+       HAL_UART_Transmit(&huart2, data, 4, 1000);
+       pasIDbuf = 0;
 
 
         // Start opnieuw met ontvangen voor de volgende byte
+
        HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
+    }
+}
+
+
+
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+    if (hi2c->Instance == I2C1) {
+        HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
+    }
+}
+
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance == TIM2)
+    {
+        if (ledAan)
+        {
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4 | LED1_Pin, GPIO_PIN_RESET);
+            ledAan = false;
+            HAL_TIM_Base_Stop_IT(&htim2);  // Stop de timer na 1x
+        }
     }
 }
 /* USER CODE END 4 */
