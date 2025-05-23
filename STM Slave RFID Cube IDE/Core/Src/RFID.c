@@ -1,5 +1,4 @@
 #include "RFID.h"
-
 uint8_t status;
 	uint8_t str[16];
 	uint8_t sNum[5];
@@ -11,14 +10,14 @@ uint8_t Data = 0; //variabele voor RFID Data
 char revbuf[50];
 
 int scanPas() {
-	int waarde = 0;
 
 status = MFRC522_Request(PICC_REQIDL, str);
+int waarde1 = 0;
 if (status == MI_OK) {
 	status = MFRC522_Anticoll(str);
 	memcpy(sNum, str, 5);
 	HAL_Delay(200);
-waarde = sNum[1] + sNum[3] + sNum[5] + sNum[2];
+waarde1 = sNum[1] + sNum[3] + sNum[4] + sNum[2];
 	  	}
-	  	 return waarde;
+	  	 return waarde1;
 }
