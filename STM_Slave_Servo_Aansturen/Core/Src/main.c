@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
 #include <stdio.h>
 //#include "I2c.h"
 
@@ -42,19 +43,26 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+DMA_HandleTypeDef hdma_i2c1_rx;
+
 TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+int status = 0;
+uint8_t RX_Buffer[1];
 //uint8_t RX_Buffer [1] ; // DATA to receive
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -93,14 +101,18 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_TIM1_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
  // I2CSetup();
  //HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
  //LedSlave();
  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); //voor servo
-// uint8_t commando[10];
+ __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
+// HAL_I2C_Slave_Receive_IT(&hi2c1, status, 2);
+ HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
 
   /* USER CODE END 2 */
 
@@ -109,11 +121,18 @@ int main(void)
   while (1)
   {
 
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);//2500
-	  HAL_Delay(1000);  // Wacht 1 seconde
 
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);//500
-	  HAL_Delay(1000);  // Wacht 1 seconde
+		if (status == 1) {
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);
+		}
+		else if (status == 0) {
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
+		}
+//	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);//2500
+//	  HAL_Delay(1000);  // Wacht 1 seconde
+
+//	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);//500
+//	  HAL_Delay(1000);  // Wacht 1 seconde
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -179,6 +198,54 @@ void SystemClock_Config(void)
   /** Enable MSI Auto calibration
   */
   HAL_RCCEx_EnableMSIPLLMode();
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x10C18DCC;
+  hi2c1.Init.OwnAddress1 = 134;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
@@ -287,6 +354,22 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -317,14 +400,23 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-//void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
-//{
-//     // Controleer of we het commando "deur" ontvangen
-//	if (strcmp((char*)commando, "deur") == 0){
-//		// 🟢 Commando is "deur" → servo openen
-//        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2000); // bijvoorbeeld 180 graden
-//	}
-//}
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
+
+	if (hi2c->Instance == I2C1) {
+		if (RX_Buffer[0] == 1) {
+			char msg1[] = "Ontvangen: 1\r\n";
+			HAL_UART_Transmit(&huart2, (uint8_t*)msg1, strlen(msg1), HAL_MAX_DELAY);
+			status = 1;
+		}
+		else{
+			char msg2[] = "Ontvangen: 0\r\n";
+			HAL_UART_Transmit(&huart2, (uint8_t*)msg2, strlen(msg2), HAL_MAX_DELAY);
+			status = 0;
+		}
+	}
+	HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
+
+}
 /* USER CODE END 4 */
 
 /**
