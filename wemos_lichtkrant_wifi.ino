@@ -6,6 +6,9 @@
 // WiFi Config
 const char* ssid = "pinetwerk";
 const char* password = "bok12345";
+IPAddress ip(192, 168, 137, 40);
+IPAddress gateway(192, 168, 137, 1);
+IPAddress subnet(255, 255, 255, 0);
 WiFiServer server(8888);
 
 // Matrix Display Config
@@ -36,6 +39,8 @@ void setup() {
   Serial.println("\nOpstarten...");
 
   // Setup WiFi
+  WiFi.config(ip, gateway, subnet);
+  WiFi.hostname("wemosLiteLichtkrant");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
