@@ -59,7 +59,11 @@ void dataOntvangenVersturen() {
         clients[i].stop();
         clients[i] = WiFiClient();
       }
-
+      // else if (data == "STATUSVERLICHTING"){
+      //   if(status){
+      //     status = !status;
+      // }
+      //}
       // RGBWAARDE 
       else if (data.indexOf("RGBWAARDE") != -1) {
         int dashIndex = data.indexOf(" - ");
@@ -68,7 +72,12 @@ void dataOntvangenVersturen() {
           int preset = numString.toInt();
           Serial.print("Ontvangen preset: ");
           Serial.println(preset);
+         // if(status){
           setRGBColor(preset,preset,preset);
+         // }
+         // else {
+         //   setRGBColor(0,0,0);
+        // }
         }
       }
     }
