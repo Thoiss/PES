@@ -113,7 +113,8 @@ int main(void)
  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
 // HAL_I2C_Slave_Receive_IT(&hi2c1, status, 2);
  HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
-
+ char test[] = "na delay";
+ char test2[] = "servo dicht";
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,6 +125,10 @@ int main(void)
 
 		if (status == 1) {
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);
+			HAL_Delay(2000);
+//			HAL_UART_Transmit(&huart2, (uint8_t*)test, strlen(test), HAL_MAX_DELAY);
+//			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
+//			HAL_UART_Transmit(&huart2, (uint8_t*)test2, strlen(test2), HAL_MAX_DELAY);
 		}
 		else if (status == 0) {
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
