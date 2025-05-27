@@ -2,6 +2,7 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <iostream>
+#include <unistd.h>
 
 Slave::Slave(int address) : address(address), fd(-1) {}
 
@@ -31,4 +32,12 @@ int Slave::leesKaart() {
         return wiringPiI2CRead(fd);
     }
     return -1; // foutcode
+}
+
+
+int Slave::leesTerminal() {
+    if (fd != -1) {
+        return wiringPiI2CRead(fd);
+    }
+    return -1; 
 }

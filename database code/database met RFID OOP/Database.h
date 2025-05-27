@@ -20,6 +20,8 @@ public:
     bool schrijvenrfid(const std::string& card_uid, const std::string& device_id);
     bool bestaatRfid(const std::string& card_uid);
     bool verwijderRfid(const std::string& card_uid);
+    std::string checkGebruiker(const std::string& card_uid);
+    int tellerUniekePersonen();
     bool lezenuser();
 
 };
