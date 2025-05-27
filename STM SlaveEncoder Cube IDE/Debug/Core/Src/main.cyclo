@@ -4,6 +4,6 @@
 ../Core/Src/main.c:247:13:MX_TIM2_Init	3
 ../Core/Src/main.c:296:13:MX_USART2_UART_Init	2
 ../Core/Src/main.c:331:13:MX_GPIO_Init	1
-../Core/Src/main.c:358:6:HAL_I2C_SlaveRxCpltCallback	11
-../Core/Src/main.c:414:6:HAL_I2C_SlaveTxCpltCallback	2
-../Core/Src/main.c:426:6:Error_Handler	1
+../Core/Src/main.c:358:6:HAL_I2C_SlaveRxCpltCallback	12
+../Core/Src/main.c:420:6:HAL_I2C_SlaveTxCpltCallback	2
+../Core/Src/main.c:432:6:Error_Handler	1

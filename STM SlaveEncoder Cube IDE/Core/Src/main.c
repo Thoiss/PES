@@ -391,7 +391,7 @@ else if(RX_Buffer [0]== 2){
   	            // stuur de gevraagde byte terug
   	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &knopStatus, 1);
 //  	          HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
-  	          knopStatus =0;
+
   	        }
 
 }
@@ -404,11 +404,17 @@ else if(RX_Buffer [0]== 3){
   	        {
   	            // stuur de gevraagde byte terug
   	            HAL_I2C_Slave_Transmit_IT(&hi2c1, &servoKnop, 1);
-  	          servoKnop = 0;
+
   	        }
 
 }
+else if(RX_Buffer [0]== 4){
+	servoKnop = 0;
+	knopStatus =0;
+	HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
+}
     HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
+
 }
 }
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
