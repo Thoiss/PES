@@ -491,8 +491,8 @@ int encoderKnopLezen(){
  80005e2:	781b      	ldrb	r3, [r3, #0]
  80005e4:	2b01      	cmp	r3, #1
  80005e6:	d110      	bne.n	800060a <encoderKnopLezen+0x4a>
-		HAL_Delay(100);
- 80005e8:	2064      	movs	r0, #100	@ 0x64
+		HAL_Delay(150);
+ 80005e8:	2096      	movs	r0, #150	@ 0x96
  80005ea:	f000 fcf3 	bl	8000fd4 <HAL_Delay>
 		knopStatus = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin);
  80005ee:	2110      	movs	r1, #16

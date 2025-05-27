@@ -18,7 +18,7 @@ int counterLezen() {
 int encoderKnopLezen(){
 	knopStatus = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin);
 	if(knopStatus == 1){
-		HAL_Delay(100);
+		HAL_Delay(150);
 		knopStatus = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin);
 	}
 

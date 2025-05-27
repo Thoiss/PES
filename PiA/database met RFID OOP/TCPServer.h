@@ -34,7 +34,9 @@ private:
     void standVerlichting();
     void standservo();
     void schrijfNaarDeuraan();
-    void schrijfNaarDeurUit();
+    void schrijfNaarDeurUit_NOOD(); 
+    void schrijfNaarDeurTempAan();
+    void schrijfNaarDeurUit_Sluis(); 
 };
 
 #endif

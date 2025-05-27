@@ -68,21 +68,26 @@ void TCPServer::run() {
         bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside, humOutside);
 
         if (insideRead && outsideRead) {
-            std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
+    std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
 
-            if (tempInside > 27.0f && tempOutside < tempInside) {
-                if (!deurAlOpen) {
-                    schrijfNaarDeuraan();
-                    deurAlOpen = true;
-                    std::cout << "Deur open vanwege temperatuur\n";
-                }
-            }
-        } else {
-            std::cerr << "Kon temperatuur niet lezen\n";
+    if (insideRead && outsideRead) {
+        std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
+
+        if (tempInside > 26.0f && tempOutside < tempInside && !deurAlOpen) {
+            schrijfNaarDeurTempAan();
+            deurAlOpen = true;
+            std::cout << "Deur open vanwege temperatuur\n";
         }
+        else if (tempInside < 25.0f && deurAlOpen) {
+            schrijfNaarDeurUit_Sluis();
+            deurAlOpen = false;
+            std::cout << "Deur dicht vanwege temperatuur\n";
+        }
+    }
+}
 
         // Uitvoering van bestaande logica
-        schrijfNaarDeurUit();     // stuur deur dicht commando
+        // schrijfNaarDeurUit();     // stuur deur dicht commando
         verwerkKaart();           // verwerk RFID kaart
         waardeVerlichting();      // lees helderheid
         standVerlichting();       // lees status verlichting
@@ -205,6 +210,7 @@ void TCPServer::standservo(){
     statusservo = s3.leesTerminal();
  //   std::cout << "Stand servo: " << statusservo<< std::endl;
     // sleep(1);
+    schrijfNaarDeuraan();
     s3.schrijfCommando(4);
 }
 void TCPServer::verwerkKaart() {
@@ -236,7 +242,13 @@ void TCPServer::schrijfNaarDeuraan(){
     s4.schrijfCommando(1);
   //  std::cout << "deur is open\n";
 }
-void TCPServer::schrijfNaarDeurUit(){
+void TCPServer::schrijfNaarDeurUit_NOOD(){
     s4.schrijfCommando(0);
   //  std::cout << "deur is dicht\n";
+}
+void TCPServer::schrijfNaarDeurTempAan(){
+    s4.schrijfCommando(2);
+}
+void TCPServer::schrijfNaarDeurUit_Sluis(){
+    s4.schrijfCommando(3);
 }
