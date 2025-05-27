@@ -11,6 +11,8 @@ public:
 
     bool init();
     int leesKaart();
+    int leesTerminal();
+    int leesTerminal2(char* buffer, int maxLen);
     void schrijfCommando(int commando);
 };
 

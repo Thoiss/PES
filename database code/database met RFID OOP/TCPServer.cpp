@@ -7,6 +7,8 @@
 #include <cstring>
 #include <iostream>
 #include <algorithm>
+#include "SHT3XSensor.h"
+#include "I2CDevice.h"
 
 TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave &s2, Slave &s3, Slave &s4)
     : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2), s3(s3), s4(s4){}
@@ -47,14 +49,49 @@ void TCPServer::setupSocket() {
 void TCPServer::run() {
     setupSocket();
 
+    // Temperatuursensoren initialiseren
+    SHT3XSensor insideSensor(0x44);   // Binnen
+    SHT3XSensor outsideSensor(0x45);  // Buiten
+    bool deurAlOpen = false;
+
+    if (!insideSensor.openDevice() || !outsideSensor.openDevice()) {
+        std::cerr << "Kon sensoren niet openen\n";
+        return;
+    }
+
     while (true) {
-    schrijfNaarDeurUit();
-     verwerkKaart();
-     waardeVerlichting();
-     standVerlichting();
-     standservo();
+        // Lees temperatuur
+        float tempInside = 0.0f, humInside = 0.0f;
+        float tempOutside = 0.0f, humOutside = 0.0f;
+
+        bool insideRead = insideSensor.readTemperatureAndHumidity(tempInside, humInside);
+        bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside, humOutside);
+
+        if (insideRead && outsideRead) {
+            std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
+
+            if (tempInside > 27.0f && tempOutside < tempInside) {
+                if (!deurAlOpen) {
+                    schrijfNaarDeuraan();
+                    deurAlOpen = true;
+                    std::cout << "Deur open vanwege temperatuur\n";
+                }
+            }
+        } else {
+            std::cerr << "Kon temperatuur niet lezen\n";
+        }
+
+        // Uitvoering van bestaande logica
+        schrijfNaarDeurUit();     // stuur deur dicht commando
+        verwerkKaart();           // verwerk RFID kaart
+        waardeVerlichting();      // lees helderheid
+        standVerlichting();       // lees status verlichting
+        standservo();             // lees status servo
+
         int personen = db.tellerUniekePersonen();
-        std::cout << "personen: " << personen <<"\n";
+        std::cout << "personen: " << personen << "\n";
+
+        // TCP socket handling
         fd_set readfds;
         FD_ZERO(&readfds);
         FD_SET(server_fd_, &readfds);
@@ -69,7 +106,7 @@ void TCPServer::run() {
 
         struct timeval timeout;
         timeout.tv_sec = 0;
-        timeout.tv_usec = 100000; // 100ms
+        timeout.tv_usec = 100000; // 100ms select timeout
 
         int activity = select(max_sd + 1, &readfds, nullptr, nullptr, &timeout);
 
@@ -83,7 +120,12 @@ void TCPServer::run() {
 
         handleClientActivity(readfds);
     }
+
+    // Sensoren afsluiten (alleen bereikt bij break/exit, anders oneindige loop)
+    insideSensor.closeDevice();
+    outsideSensor.closeDevice();
 }
+
 
 void TCPServer::acceptNewClient() {
     sockaddr_in address;
@@ -178,8 +220,12 @@ void TCPServer::verwerkKaart() {
             db.verwijderRfid(data);
      //       std::cout << "UID verwijderd uit DB.\n";
         } else {
+            std::string persoon = db.checkGebruiker(data);
+            if (persoon != "guest") {
             schrijfNaarDeuraan();
-            db.schrijvenrfid(data, "raspberry2");
+            //naam naar lichtkrant sturen
+            db.schrijvenrfid(data, persoon);
+            }
      //       std::cout << "UID toegevoegd aan DB.\n";
         }
         //naar de I2C commando sturen voor openen deur
