@@ -8,8 +8,8 @@
 #include <iostream>
 #include <algorithm>
 
-TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave &s2)
-    : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2) {}
+TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave &s2, Slave &s3, Slave &s4)
+    : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2), s3(s3), s4(s4){}
 
 void TCPServer::setupSocket() {
     server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -48,7 +48,13 @@ void TCPServer::run() {
     setupSocket();
 
     while (true) {
-        verwerkKaart();
+    schrijfNaarDeurUit();
+     verwerkKaart();
+     waardeVerlichting();
+     standVerlichting();
+     standservo();
+        int personen = db.tellerUniekePersonen();
+        std::cout << "personen: " << personen <<"\n";
         fd_set readfds;
         FD_ZERO(&readfds);
         FD_SET(server_fd_, &readfds);
@@ -87,7 +93,7 @@ void TCPServer::acceptNewClient() {
     if (new_socket >= 0) {
         fcntl(new_socket, F_SETFL, O_NONBLOCK);
         client_sockets_.push_back(new_socket);
-        std::cout << "Nieuwe client verbonden!\n";
+  //      std::cout << "Nieuwe client verbonden!\n";
     }
 }
 
@@ -100,7 +106,7 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
         if (FD_ISSET(sd, &readfds)) {
             int valread = read(sd, buffer, sizeof(buffer) - 1);
             if (valread <= 0) {
-                std::cout << "Client " << sd << " heeft de verbinding verbroken\n";
+          //      std::cout << "Client " << sd << " heeft de verbinding verbroken\n";
                 close(sd);
                 it = client_sockets_.erase(it);
                 continue;
@@ -108,6 +114,7 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
 
             buffer[valread] = '\0';
             std::string message(buffer);
+        //    std::cout << "Client ontvangen: " << message << "\n";
             handleClientMessage(sd, message);
         }
 
@@ -116,22 +123,18 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
 }
 
 void TCPServer::handleClientMessage(int client_fd, const std::string& message) {
-    if (message == "LED") {
-        s2.schrijfCommando('1');
-        sleep(1);
-        s2.schrijfCommando('0');
-    }
-    else if (message == "Status") {
-        int status = s2.leesKaart();
-        if (status == 0) sendMessage(client_fd, "uit");
-        else if (status == 1) sendMessage(client_fd, "aan");
-        else if (status == 3) {
-            sendMessage(client_fd, "trigger");
-            s2.schrijfCommando('1');
-            sleep(1);
-            s1.schrijfCommando('0');
+    if (message == "Status") {
+        std::cout << "Status ontvangen\n";
+    //    sendMessage(client_fd, person);
         }
-    } else {
+    else if (message == "STMEncoder") {
+        std::string encoderVerlichting = 
+        std::to_string(statusverlichting) + "-" + 
+        std::to_string(verlichtingwaarde);
+        std::cout << encoderVerlichting<< "\n";
+        sendMessage(client_fd, encoderVerlichting);
+        }
+    else {
         sendMessage(client_fd, "niet correct ontvangen");
     }
 }
@@ -139,23 +142,55 @@ void TCPServer::handleClientMessage(int client_fd, const std::string& message) {
 void TCPServer::sendMessage(int client_fd, const std::string& message) {
     send(client_fd, message.c_str(), message.length(), 0);
 }
-
+void TCPServer::waardeVerlichting(){
+   s3.schrijfCommando(1);
+    char buf[16];
+verlichtingwaarde = s3.leesTerminal();
+ //   std::cout << "Verlichting helderheid: " << verlichtingwaarde<< std::endl;
+//   sleep(1);
+  
+}
+void TCPServer::standVerlichting(){
+    s3.schrijfCommando(2);
+    char buf[16];
+    statusverlichting = s3.leesTerminal();
+    std::cout << "Stand verlichting helderheid: " << statusverlichting<< std::endl;
+    // sleep(1);
+}
+void TCPServer::standservo(){
+    s3.schrijfCommando(3);
+    char buf[16];
+    statusservo = s3.leesTerminal();
+ //   std::cout << "Stand servo: " << statusservo<< std::endl;
+    // sleep(1);
+    s3.schrijfCommando(4);
+}
 void TCPServer::verwerkKaart() {
     s1.schrijfCommando(1);  // commando 1 om kaart te lezen
     int pasID = s1.leesKaart();
 
-    if (pasID != 48 && pasID != -1) {
+    if (pasID != 0 && pasID != -1) {
         std::string data = std::to_string(pasID);
         std::cout << "Kaart = " << data << std::endl;
+     //   schrijfNaarDeur();
 
         if (db.bestaatRfid(data)) {
             db.verwijderRfid(data);
-            std::cout << "UID verwijderd uit DB.\n";
+     //       std::cout << "UID verwijderd uit DB.\n";
         } else {
+            schrijfNaarDeuraan();
             db.schrijvenrfid(data, "raspberry2");
-            std::cout << "UID toegevoegd aan DB.\n";
+     //       std::cout << "UID toegevoegd aan DB.\n";
         }
         //naar de I2C commando sturen voor openen deur
     }
-    sleep(1);
+}
+
+void TCPServer::schrijfNaarDeuraan(){
+    s4.schrijfCommando(1);
+  //  std::cout << "deur is open\n";
+}
+void TCPServer::schrijfNaarDeurUit(){
+    s4.schrijfCommando(0);
+  //  std::cout << "deur is dicht\n";
 }
