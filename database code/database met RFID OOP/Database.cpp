@@ -27,7 +27,6 @@ bool Database::init() {
 
     return true;
 }
-
 bool Database::schrijvenrfid(const std::string& card_uid, const std::string& naam) {
     
     if (!conn) {
@@ -48,7 +47,6 @@ bool Database::schrijvenrfid(const std::string& card_uid, const std::string& naa
     std::cout << "RFID-gegevens succesvol toegevoegd!" << std::endl;
     return true;
 }
-
 bool Database::bestaatRfid(const std::string& card_uid) {
     if (!conn) {
         std::cerr << "Database niet geïnitialiseerd.\n";
@@ -76,7 +74,6 @@ bool Database::bestaatRfid(const std::string& card_uid) {
     
     return exists;
 }
-
 bool Database::verwijderRfid(const std::string& card_uid) {
     if (!conn) {
         std::cerr << "Database niet geïnitialiseerd.\n";
@@ -100,4 +97,63 @@ bool Database::verwijderRfid(const std::string& card_uid) {
 
     std::cout << "UID succesvol verwijderd.\n";
     return true;
+}
+int Database::tellerUniekePersonen() {
+    if (!conn) {
+        std::cerr << "Database niet geïnitialiseerd.\n";
+        return -1;
+    }
+
+    const char* query = "SELECT COUNT(DISTINCT card_uid) FROM rfid_logs";
+
+    if (mysql_query(conn, query)) {
+        std::cerr << "SELECT query mislukt: " << mysql_error(conn) << std::endl;
+        return -1;
+    }
+
+    MYSQL_RES* res = mysql_store_result(conn);
+    if (!res) {
+        std::cerr << "Resultaten ophalen mislukt: " << mysql_error(conn) << std::endl;
+        return -1;
+    }
+
+    MYSQL_ROW row = mysql_fetch_row(res);
+    int uniekePersonen = -1;
+    if (row && row[0]) {
+        uniekePersonen = std::atoi(row[0]);
+    } else {
+        std::cerr << "Kon geen resultaten lezen.\n";
+    }
+
+    mysql_free_result(res);
+    return uniekePersonen;
+}
+std::string Database::checkGebruiker(const std::string& card_uid) {
+    if (!conn) {
+        std::cerr << "Database niet geïnitialiseerd.\n";
+        return "";
+    }
+
+    std::string query = "SELECT naam FROM users WHERE card_uid = '" + card_uid + "'";
+
+    if (mysql_query(conn, query.c_str())) {
+        std::cerr << "Select query mislukt: " << mysql_error(conn) << std::endl;
+        return "";
+    }
+
+    MYSQL_RES* res = mysql_store_result(conn);
+    if (!res) {
+        std::cerr << "Resultaten ophalen mislukt: " << mysql_error(conn) << std::endl;
+        return "";
+    }
+
+    MYSQL_ROW row = mysql_fetch_row(res);
+    std::string resultaat = "guest";
+
+    if (row && row[0]) {
+        resultaat = row[0];  // naam zit in de eerste kolom
+    }
+
+    mysql_free_result(res);
+    return resultaat;
 }
