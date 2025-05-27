@@ -19,37 +19,6 @@ void dataOntvangenVersturen() {
       Serial.print(": ");
       Serial.println(data);
 
-      // wemosStatus
-      if (data == "wemosStatus") {
-        memset(Status, 0, sizeof(Status));
-        if (Print_Knop == 1) {
-          Serial.print("Op data is knop uitgelezen");
-          strcat(Status, " TRUE");
-          Print_Knop = 0;
-          Serial.println("True toegevoegd ");
-        } else {
-          strcat(Status, " FALSE");
-        }
-        if (PiPrint_Knop == 1) {
-          Serial.print("Op data is knop uitgelezen");
-          strcat(Status, " PiTRUE");
-          Serial.println("PiTrue toegevoegd ");
-          PiPrint_Knop = 0;
-        } else {
-          strcat(Status, " PiFALSE");
-        }
-        strcat(Status, " RGBFALSE");
-        strcat(Status, deviceNaam);
-        clients[i].print(Status);
-      }
-
-
-      // Led-aansturing
-      if (data == "Led") {
-        digitalWrite(LED_PIN, HIGH);
-        ledTimer.once(1.5, ledUitZetten);
-      }
-
       // Disconnect
       if (data == "End") {
         clients[i].print("Verbinding wordt afgesloten door server");
@@ -59,25 +28,29 @@ void dataOntvangenVersturen() {
         clients[i].stop();
         clients[i] = WiFiClient();
       }
-      // else if (data == "STATUSVERLICHTING"){
-      //   if(status){
-      //     status = !status;
-      // }
-      //}
-      // RGBWAARDE 
+      //RGBWAARDE
       else if (data.indexOf("RGBWAARDE") != -1) {
-        int dashIndex = data.indexOf(" - ");
-        if (dashIndex != -1) {
-          String numString = data.substring(0, dashIndex);
-          int preset = numString.toInt();
-          Serial.print("Ontvangen preset: ");
-          Serial.println(preset);
-         // if(status){
-          setRGBColor(preset,preset,preset);
-         // }
-         // else {
-         //   setRGBColor(0,0,0);
-        // }
+        int firstDash = data.indexOf(" - ");
+        int secondDash = data.indexOf(" - ", firstDash + 3);  // begin na eerste dash
+
+        if (firstDash != -1 && secondDash != -1) {
+          String statusStr = data.substring(0, firstDash);
+          String waardeStr = data.substring(firstDash + 3, secondDash);
+
+          int status = statusStr.toInt();
+          int waarde = waardeStr.toInt();
+
+          Serial.print("Status verlichting: ");
+          Serial.println(status);
+          Serial.print("Verlichtingswaarde: ");
+          Serial.println(waarde);
+
+          if (status == 1) {
+            setRGBColor(waarde, waarde, waarde);
+          } else {
+            Serial.println("Verlichting uit of genegeerd.");
+            setRGBColor(0, 0, 0);
+          }
         }
       }
     }
