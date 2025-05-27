@@ -210,7 +210,9 @@ void TCPServer::standservo(){
     statusservo = s3.leesTerminal();
  //   std::cout << "Stand servo: " << statusservo<< std::endl;
     // sleep(1);
-    schrijfNaarDeuraan();
+    if (statusservo == 1) {
+        schrijfNaarDeuraan();
+    }
     s3.schrijfCommando(4);
 }
 void TCPServer::verwerkKaart() {
