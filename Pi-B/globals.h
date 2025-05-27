@@ -35,8 +35,10 @@ extern ssize_t valread;
 extern int PiWaarde_Knop;
 extern int Waarde_Knop;
 extern int Pi_a_Led;
-extern char RGBSend[15];
+extern char RGBSend[30];
 extern int RGBWaarde;
+extern int statusVerlichting;
 extern bool Versturen;
+extern int verlichtingsWaarde;
 
 #endif // GLOBALS_H

@@ -11,7 +11,6 @@ class StatusHandler {
 public:
     StatusHandler(int socket, WemosAansturen& aansturen);
 
-    int vraagKnopStatus();
 
 private:
     int socket_;

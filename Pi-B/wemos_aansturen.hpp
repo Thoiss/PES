@@ -10,7 +10,7 @@ class WemosAansturen {
 public:
     WemosAansturen();
 
-    int stuurWemosAan(char* deviceNaam, int socket);
+    int stuurWemosAan( int socket);
 
 private:
     int tellerdevices;

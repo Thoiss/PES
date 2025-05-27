@@ -16,7 +16,7 @@ int WemosConnection::connectToWemos(const char* ip) {
         return -1;
     }
 
-    struct timeval to = { .tv_sec = 1, .tv_usec = 150000  };
+    struct timeval to = { .tv_sec = 0, .tv_usec = 50000  };
     setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &to, sizeof(to));
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to));
 
@@ -38,7 +38,7 @@ int WemosConnection::connectToWemos(const char* ip) {
     fd_set wfds;
     FD_ZERO(&wfds);
     FD_SET(sock, &wfds);
-    struct timeval tv = { .tv_sec = 0, .tv_usec = 1500000 };
+    struct timeval tv = { .tv_sec = 0, .tv_usec = 500000 };
     select(sock + 1, NULL, &wfds, NULL, &tv);
 
     printf("Verbonden met Wemos op %s\n", ip);

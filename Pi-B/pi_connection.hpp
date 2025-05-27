@@ -15,12 +15,9 @@ class PiConnection {
 public:
     int connectToPi(const char* ip, int port);
     int verlichtingwaarde();
-    int handlePiConnection();
 private:
     int pi_a_socket = 0;  
     int oudVerlichtingswaarde = 0;  
-    int verlichtingsWaarde = 0;
-    bool statusVerlichting = false;
     int statusServo = 0;
     char *token = nullptr;
 };

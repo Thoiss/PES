@@ -58,51 +58,9 @@ int PiConnection::connectToPi(const char *ip, int port)
     return sock;
 }
 
-int PiConnection::handlePiConnection()
-{
-    if (pi_a_socket <= 0)
-    {
-        return -1;
-    }
-
-    const char *PiLed = "LED";
-    const char *PiStatus = "Status";
-    int retry = 0;
-    if (PiWaarde_Knop == 1)
-    {
-        send(pi_a_socket, PiLed, strlen(PiLed), 0);
-        printf("Bericht LED verstuurt naar Pi-A \n");
-        PiWaarde_Knop = 0;
-    }
-    memset(buffer, 0, sizeof(buffer));
-    send(pi_a_socket, PiStatus, strlen(PiStatus), 0);
-
-    int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
-    buffer[valread] = '\0';
-    char *token = strtok(buffer, " "); // Parse until the first space
-    if (token == nullptr)
-    {
-        printf("Niks binnen\n");
-        return -1; // Handle invalid token (e.g., empty response)
-    }
-    if (strcmp(token, "TRUE") == 0)
-    { // If token is 'TRUE'
-    }
-    else if (strcmp(token, "FALSE") != 0)
-    {
-        return 0;
-    }
-
-    if (strcmp(buffer, "aan") == 0)
-    {
-        Pi_a_Led = 1;
-        Versturen = true;
-    }
-    memset(buffer, 0, sizeof(buffer));
-    return 0;
-}
 int PiConnection::verlichtingwaarde()
-{int retry = 0;
+{
+    int retry = 0;
     if (pi_a_socket <= 0)
     {
         return -1;
@@ -113,43 +71,39 @@ int PiConnection::verlichtingwaarde()
     send(pi_a_socket, PiVerlichting, strlen(PiVerlichting), 0);
     int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
     buffer[valread] = '\0';
-    while  (retry <= 3)
+    printf("Ontvangen PiA:%s\n", buffer);
+    while (retry <= 15 && valread <= 0)
     {
-        int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+        usleep(250000); // 250 ms
+        valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+        printf("Ontvangen voor PiA:%d\n", valread);
         buffer[valread] = '\0';
-        char *token = strtok(buffer, "-"); // Parse until the first -
+        printf("Ontvangen PiA:%s\n", buffer);
         retry++;
-        if (token == nullptr)
-        {
-            printf("Niks binnen\n");
-            return -1; 
-        }
     }
-    // verlictingswaarde wordt alleen verstuurd wanneer deze veranderd is
-    verlichtingsWaarde = atoi(token);
-    if (verlichtingsWaarde != oudVerlichtingswaarde && !statusVerlichting)
+    if (valread <= 0 || buffer == "niet correct ontvangen")
     {
-        oudVerlichtingswaarde = verlichtingsWaarde;
-        // Versturen = true;
-        printf("Verlichtingswaarde: %d\n", verlichtingsWaarde);
+        printf("Niks binnen\n");
+        return -1;
     }
+    char *token = strtok(buffer, "-"); // Parse until the first -
     // statusVerlichting wordt een toggle op 1
-    token = strtok(nullptr, "-");
     int verlichtingStatus = atoi(token);
     if (verlichtingStatus == 1)
     {
-        // Versturen = true;
+        Versturen = true;
         statusVerlichting = !statusVerlichting;
         printf("statusVerlichting: %d\n", statusVerlichting);
-        
     }
-    // statusServo wordt een toggle op 1
+    // verlictingswaarde wordt alleen verstuurd wanneer deze veranderd is
     token = strtok(nullptr, "-");
-    statusServo = atoi(token);
-    if (statusServo == 1)
+    verlichtingsWaarde = atoi(token);
+    if (verlichtingsWaarde != oudVerlichtingswaarde)
     {
-        // Versturen = true;
-        printf("statusServo: %d\n", statusServo);
+        oudVerlichtingswaarde = verlichtingsWaarde;
+        Versturen = true;
+        RGBWaarde = verlichtingsWaarde;
+        printf("Verlichtingswaarde: %d\n", verlichtingsWaarde);
     }
     memset(buffer, 0, sizeof(buffer));
     return 0;
