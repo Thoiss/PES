@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
 #include <stdio.h>
 //#include "I2c.h"
 
@@ -42,19 +43,28 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+DMA_HandleTypeDef hdma_i2c1_rx;
+
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim16;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+int status = 0;
+uint8_t RX_Buffer[1];
 //uint8_t RX_Buffer [1] ; // DATA to receive
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -93,27 +103,66 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_TIM1_Init();
+  MX_I2C1_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
  // I2CSetup();
  //HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
  //LedSlave();
- HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); //voor servo
-// uint8_t commando[10];
-
+ HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); //voor servo rfid
+ HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1); //voor servo temperatuur
+ __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
+// HAL_I2C_Slave_Receive_IT(&hi2c1, status, 2);
+ HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
+ char test[] = "je bent in status 2 functie\n\r";
+ char test2[] = "na delay\n\r";
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+//	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3)){
+//		  HAL_UART_Transmit(&huart2, (uint8_t*)test, strlen(test), HAL_MAX_DELAY);
+//		  HAL_Delay(5000);
+//	  }
+//	  else{
+//		  HAL_UART_Transmit(&huart2, (uint8_t*)test2, strlen(test2), HAL_MAX_DELAY);
+//		  HAL_Delay(5000);
+//	  }
 
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);//2500
-	  HAL_Delay(1000);  // Wacht 1 seconde
 
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);//500
-	  HAL_Delay(1000);  // Wacht 1 seconde
+		if (status == 1) {
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);
+			HAL_Delay(2000);
+			HAL_UART_Transmit(&huart2, (uint8_t*)test2, strlen(test2), HAL_MAX_DELAY);
+			//__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
+			status = 0;
+		}
+
+		else if (status == 0) {
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
+		}
+
+		else if (status == 2) {
+			HAL_UART_Transmit(&huart2, (uint8_t*)test, strlen(test), HAL_MAX_DELAY);
+			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, 2500);
+			HAL_Delay(2000);
+		}
+
+		else if (status == 3) {
+			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, 500);
+			HAL_Delay(2000);
+		}
+
+//	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);//2500
+//	  HAL_Delay(1000);  // Wacht 1 seconde
+
+//	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);//500
+//	  HAL_Delay(1000);  // Wacht 1 seconde
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -179,6 +228,54 @@ void SystemClock_Config(void)
   /** Enable MSI Auto calibration
   */
   HAL_RCCEx_EnableMSIPLLMode();
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x10C18DCC;
+  hi2c1.Init.OwnAddress1 = 134;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
@@ -252,6 +349,68 @@ static void MX_TIM1_Init(void)
 }
 
 /**
+  * @brief TIM16 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM16_Init(void)
+{
+
+  /* USER CODE BEGIN TIM16_Init 0 */
+
+  /* USER CODE END TIM16_Init 0 */
+
+  TIM_OC_InitTypeDef sConfigOC = {0};
+  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
+
+  /* USER CODE BEGIN TIM16_Init 1 */
+
+  /* USER CODE END TIM16_Init 1 */
+  htim16.Instance = TIM16;
+  htim16.Init.Prescaler = 72-1;
+  htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim16.Init.Period = 20000 -1;
+  htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim16.Init.RepetitionCounter = 0;
+  htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  if (HAL_TIM_PWM_ConfigChannel(&htim16, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+  sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+  sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+  sBreakDeadTimeConfig.DeadTime = 0;
+  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+  sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+  sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+  if (HAL_TIMEx_ConfigBreakDeadTime(&htim16, &sBreakDeadTimeConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM16_Init 2 */
+
+  /* USER CODE END TIM16_Init 2 */
+  HAL_TIM_MspPostInit(&htim16);
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -287,6 +446,22 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -305,6 +480,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin : PA3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LD3_Pin */
   GPIO_InitStruct.Pin = LD3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -312,19 +493,44 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD3_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-//void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
-//{
-//     // Controleer of we het commando "deur" ontvangen
-//	if (strcmp((char*)commando, "deur") == 0){
-//		// 🟢 Commando is "deur" → servo openen
-//        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2000); // bijvoorbeeld 180 graden
-//	}
-//}
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
+
+	if (hi2c->Instance == I2C1) {
+		if (RX_Buffer[0] == 1) {
+			char msg1[] = "Ontvangen: 1\r\n";
+			HAL_UART_Transmit(&huart2, (uint8_t*)msg1, strlen(msg1), HAL_MAX_DELAY);
+			status = 1;
+		}
+
+		else if(RX_Buffer[0] == 0){
+			char msg2[] = "Ontvangen: 0\r\n";
+			HAL_UART_Transmit(&huart2, (uint8_t*)msg2, strlen(msg2), HAL_MAX_DELAY);
+			status = 0;
+		}
+		else if(RX_Buffer[0] == 2){
+			char msg3[] = "Ontvangen: 2\r\n";
+			HAL_UART_Transmit(&huart2, (uint8_t*)msg3, strlen(msg3), HAL_MAX_DELAY);
+			status = 2;
+		}
+		else if(RX_Buffer[0] == 3){
+					char msg4[] = "Ontvangen: 3\r\n";
+					HAL_UART_Transmit(&huart2, (uint8_t*)msg4, strlen(msg4), HAL_MAX_DELAY);
+					status = 3;
+				}
+
+	}
+	HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
+
+}
 /* USER CODE END 4 */
 
 /**

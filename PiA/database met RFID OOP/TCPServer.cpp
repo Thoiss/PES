@@ -79,7 +79,7 @@ void TCPServer::run() {
             std::cout << "Deur open vanwege temperatuur\n";
         }
         else if (tempInside < 25.0f && deurAlOpen) {
-            schrijfNaarDeurUit_Temp();
+            schrijfNaarDeurUit_Sluis();
             deurAlOpen = false;
             std::cout << "Deur dicht vanwege temperatuur\n";
         }
@@ -212,7 +212,7 @@ void TCPServer::standservo(){
  //   std::cout << "Stand servo: " << statusservo<< std::endl;
     // sleep(1);
     if (statusservo == 1) {
-        schrijfNaarDeur_RFID();
+        schrijfNaarDeuraan();
     }
     s3.schrijfCommando(4);
 }

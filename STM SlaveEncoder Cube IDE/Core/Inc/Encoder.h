@@ -8,7 +8,6 @@ extern uint32_t delay;
 extern uint8_t knopStatus;
 extern uint8_t servoKnop;
 
-
 int counterLezen();
 int encoderKnopLezen();
 int servoKnopLezen();
