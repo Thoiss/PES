@@ -1,4 +1,4 @@
-//g++ main.cpp Slave.cpp Database.cpp TCPServer.cpp SHT3XSensor.cpp I2CDevice.cpp -o main -lwiringPi -lmariadb
+//g++ *.cpp -o main -lwiringPi -lmariadb
 
 #include "TCPServer.h"
 #include <iostream>

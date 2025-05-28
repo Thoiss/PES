@@ -79,7 +79,7 @@ void TCPServer::run() {
             std::cout << "Deur open vanwege temperatuur\n";
         }
         else if (tempInside < 25.0f && deurAlOpen) {
-            schrijfNaarDeurUit_Sluis();
+            schrijfNaarDeurUit_Temp();
             deurAlOpen = false;
             std::cout << "Deur dicht vanwege temperatuur\n";
         }
@@ -170,10 +170,11 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
 }
 
 void TCPServer::handleClientMessage(int client_fd, const std::string& message) {
-    if (message == "Statusroute") {
-        std::cout << "Status ontvangen\n";
-        sendMessage(client_fd, statusroute);
-        statusroute = 0;
+    if (message == "routeVerlichting") {
+        std::cout << "Routeverlichting ontvangen\n";
+        std::string statusRouteStr = std::to_string(routeVerlichting);
+        sendMessage(client_fd, statusRouteStr);
+        routeVerlichting = 0;
         }
     else if (message == "STMEncoder") {
         std::string encoderVerlichting = 
@@ -181,6 +182,7 @@ void TCPServer::handleClientMessage(int client_fd, const std::string& message) {
         std::to_string(verlichtingwaarde);
         std::cout << encoderVerlichting<< "\n";
         sendMessage(client_fd, encoderVerlichting);
+        statusverlichting =0;
         }
     else {
         sendMessage(client_fd, "niet correct ontvangen");
@@ -201,7 +203,9 @@ verlichtingwaarde = s3.leesTerminal();
 void TCPServer::standVerlichting(){
     s3.schrijfCommando(2);
     char buf[16];
+   // if(statusverlichting ==0){
     statusverlichting = s3.leesTerminal();
+    //}
     std::cout << "Stand verlichting helderheid: " << statusverlichting<< std::endl;
     // sleep(1);
 }
@@ -212,7 +216,7 @@ void TCPServer::standservo(){
  //   std::cout << "Stand servo: " << statusservo<< std::endl;
     // sleep(1);
     if (statusservo == 1) {
-        schrijfNaarDeuraan();
+        schrijfNaarDeur_RFID();
     }
     s3.schrijfCommando(4);
 }
@@ -230,9 +234,9 @@ void TCPServer::verwerkKaart() {
      //       std::cout << "UID verwijderd uit DB.\n";
         } else {
             std::string persoon = db.checkGebruiker(data);
-            statuspersoon = db.checkLichtStatus(data)
+            routeVerlichting = db.checkLichtStatus(data);
             if (persoon != "guest") {
-            schrijfNaarDeuraan();
+            schrijfNaarDeur_RFID();
             //naam naar lichtkrant sturen
             db.schrijvenrfid(data, persoon);
             }
@@ -253,6 +257,6 @@ void TCPServer::schrijfNaarDeurUit_NOOD(){
 void TCPServer::schrijfNaarDeurTempAan(){
     s4.schrijfCommando(2);
 }
-void TCPServer::schrijfNaarDeurUit_Sluis(){
+void TCPServer::schrijfNaarDeurUit_Temp(){
     s4.schrijfCommando(3);
 }

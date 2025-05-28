@@ -12,7 +12,7 @@ public:
     void run();
 
 private:
-    int statusroute = 0;
+    int routeVerlichting = 0;
     int port_;
     int server_fd_;
     int statusverlichting = 0;
@@ -34,10 +34,10 @@ private:
     void waardeVerlichting();
     void standVerlichting();
     void standservo();
-    void schrijfNaarDeuraan();
+    void schrijfNaarDeur_RFID();
     void schrijfNaarDeurUit_NOOD(); 
     void schrijfNaarDeurTempAan();
-    void schrijfNaarDeurUit_Sluis(); 
+    void schrijfNaarDeurUit_Temp(); 
 };
 
 #endif
