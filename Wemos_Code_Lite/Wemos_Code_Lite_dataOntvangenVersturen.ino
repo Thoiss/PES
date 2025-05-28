@@ -39,6 +39,10 @@ void dataOntvangenVersturen(WiFiClient clients[]) {
         clients[i].stop();
         clients[i] = WiFiClient();
       }
+      if (data == "1") { // klopt mogelijk niet, weet niet precies wat het binnenkomend bericht is vanaf Pi A.
+        Serial.println("RGB LED uit");
+        setRGBColor(0, 0, 0);
+      }
       //RGBWAARDE
       else if (data.indexOf("RGBWAARDE") != -1) {
         int firstDash = data.indexOf(" - ");

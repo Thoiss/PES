@@ -4,4 +4,5 @@
 #define MAX_CLIENTS 5
 void dataOntvangenVersturen(WiFiClient clients[]);
 void RGBAanzetten();
+void routeVerlichtingAan();
 #endif // WEMOS_LITE_DATAHANDLER_H
