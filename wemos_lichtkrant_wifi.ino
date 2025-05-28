@@ -22,17 +22,8 @@ String scrollText = "enabled";
 
 // Client/Status Config
 #define MAX_CLIENTS 5
-#define Time_Delay 10000
-#define BUTTON_PIN D1
-#define PI_PIN D2
-#define RGB_Button D5
 WiFiClient clients[MAX_CLIENTS];
 unsigned long lastActiveTime[MAX_CLIENTS] = { 0 };
-char Status[200] = "";
-int Print_Knop = 0;
-int PiPrint_Knop = 0;
-int RGB_Preset_Knop = 0;
-int RGBWaarde = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -50,11 +41,6 @@ void setup() {
   Serial.print("IP Adres: ");
   Serial.println(WiFi.localIP());
   server.begin();
-
-  // Setup buttons
-  pinMode(PI_PIN, INPUT_PULLUP);
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  pinMode(RGB_Button, INPUT_PULLUP);
 
   // Setup Matrix
   matrix.begin();
@@ -106,21 +92,9 @@ void loop() {
             clients[i].println("Display updated.");
           }
 
-          // Status check
+          // Status check (no button status anymore)
           else if (data == "wemosStatus") {
-            memset(Status, 0, sizeof(Status));
-            strcat(Status, Print_Knop ? " TRUE" : " FALSE");
-            strcat(Status, PiPrint_Knop ? " PiTRUE" : " PiFALSE");
-            if (RGB_Preset_Knop) {
-              char RGBWaardeStr[10];
-              sprintf(RGBWaardeStr, "%d", RGBWaarde);
-              strcat(Status, " ");
-              strcat(Status, RGBWaardeStr);
-            } else {
-              strcat(Status, " RGBFALSE");
-            }
-            Print_Knop = PiPrint_Knop = RGB_Preset_Knop = 0;
-            clients[i].println(Status);
+            clients[i].println("NO_BUTTON_STATUS");
           }
 
           // Disconnect client
@@ -132,33 +106,6 @@ void loop() {
           }
         }
       }
-    }
-  }
-
-  // Button checks
-  if (digitalRead(BUTTON_PIN) == LOW) {
-    delay(200);
-    if (digitalRead(BUTTON_PIN) == LOW && Print_Knop == 0) {
-      Serial.println("Knop is ingedrukt.");
-      Print_Knop = 1;
-    }
-  }
-
-  if (digitalRead(PI_PIN) == LOW) {
-    delay(200);
-    if (digitalRead(PI_PIN) == LOW && PiPrint_Knop == 0) {
-      Serial.println("PiKnop is ingedrukt.");
-      PiPrint_Knop = 1;
-    }
-  }
-
-  if (digitalRead(RGB_Button) == LOW) {
-    delay(250);
-    if (digitalRead(RGB_Button) == LOW && RGB_Preset_Knop == 0) {
-      Serial.println("RGB Knop is ingedrukt.");
-      RGBWaarde++;
-      if (RGBWaarde >= 4) RGBWaarde = 1;
-      RGB_Preset_Knop = 1;
     }
   }
 }
