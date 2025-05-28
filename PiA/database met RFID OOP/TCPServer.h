@@ -12,6 +12,7 @@ public:
     void run();
 
 private:
+    int statusroute = 0;
     int port_;
     int server_fd_;
     int statusverlichting = 0;

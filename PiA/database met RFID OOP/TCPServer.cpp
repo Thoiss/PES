@@ -170,9 +170,10 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
 }
 
 void TCPServer::handleClientMessage(int client_fd, const std::string& message) {
-    if (message == "Status") {
+    if (message == "Statusroute") {
         std::cout << "Status ontvangen\n";
-    //    sendMessage(client_fd, person);
+        sendMessage(client_fd, statusroute);
+        statusroute = 0;
         }
     else if (message == "STMEncoder") {
         std::string encoderVerlichting = 
@@ -229,6 +230,7 @@ void TCPServer::verwerkKaart() {
      //       std::cout << "UID verwijderd uit DB.\n";
         } else {
             std::string persoon = db.checkGebruiker(data);
+            statuspersoon = db.checkLichtStatus(data)
             if (persoon != "guest") {
             schrijfNaarDeuraan();
             //naam naar lichtkrant sturen
@@ -240,7 +242,7 @@ void TCPServer::verwerkKaart() {
     }
 }
 
-void TCPServer::schrijfNaarDeuraan(){
+void TCPServer::schrijfNaarDeur_RFID(){
     s4.schrijfCommando(1);
   //  std::cout << "deur is open\n";
 }

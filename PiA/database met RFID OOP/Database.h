@@ -21,8 +21,9 @@ public:
     bool bestaatRfid(const std::string& card_uid);
     bool verwijderRfid(const std::string& card_uid);
     std::string checkGebruiker(const std::string& card_uid);
+    int checkLichtStatus(const std::string& card_uid);
     int tellerUniekePersonen();
     bool lezenuser();
 
 };
-#endif
+#endif 
