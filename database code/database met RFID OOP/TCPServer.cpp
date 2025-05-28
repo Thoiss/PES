@@ -68,21 +68,26 @@ void TCPServer::run() {
         bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside, humOutside);
 
         if (insideRead && outsideRead) {
-            std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
+    std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
 
-            if (tempInside > 27.0f && tempOutside < tempInside) {
-                if (!deurAlOpen) {
-                    schrijfNaarDeuraan();
-                    deurAlOpen = true;
-                    std::cout << "Deur open vanwege temperatuur\n";
-                }
-            }
-        } else {
-            std::cerr << "Kon temperatuur niet lezen\n";
+    if (insideRead && outsideRead) {
+        std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
+
+        if (tempInside > 26.0f && tempOutside < tempInside && !deurAlOpen) {
+            schrijfNaarDeurTempAan();
+            deurAlOpen = true;
+            std::cout << "Deur open vanwege temperatuur\n";
         }
+        else if (tempInside < 25.0f && deurAlOpen) {
+            schrijfNaarDeurUit_Temp();
+            deurAlOpen = false;
+            std::cout << "Deur dicht vanwege temperatuur\n";
+        }
+    }
+}
 
         // Uitvoering van bestaande logica
-        schrijfNaarDeurUit();     // stuur deur dicht commando
+        // schrijfNaarDeurUit();     // stuur deur dicht commando
         verwerkKaart();           // verwerk RFID kaart
         waardeVerlichting();      // lees helderheid
         standVerlichting();       // lees status verlichting
@@ -165,9 +170,10 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
 }
 
 void TCPServer::handleClientMessage(int client_fd, const std::string& message) {
-    if (message == "Status") {
+    if (message == "Statusroute") {
         std::cout << "Status ontvangen\n";
-    //    sendMessage(client_fd, person);
+        sendMessage(client_fd, statusroute);
+        statusroute = 0;
         }
     else if (message == "STMEncoder") {
         std::string encoderVerlichting = 
@@ -205,6 +211,9 @@ void TCPServer::standservo(){
     statusservo = s3.leesTerminal();
  //   std::cout << "Stand servo: " << statusservo<< std::endl;
     // sleep(1);
+    if (statusservo == 1) {
+        schrijfNaarDeur_RFID();
+    }
     s3.schrijfCommando(4);
 }
 void TCPServer::verwerkKaart() {
@@ -221,6 +230,7 @@ void TCPServer::verwerkKaart() {
      //       std::cout << "UID verwijderd uit DB.\n";
         } else {
             std::string persoon = db.checkGebruiker(data);
+            statuspersoon = db.checkLichtStatus(data)
             if (persoon != "guest") {
             schrijfNaarDeuraan();
             //naam naar lichtkrant sturen
@@ -232,11 +242,17 @@ void TCPServer::verwerkKaart() {
     }
 }
 
-void TCPServer::schrijfNaarDeuraan(){
+void TCPServer::schrijfNaarDeur_RFID(){
     s4.schrijfCommando(1);
   //  std::cout << "deur is open\n";
 }
-void TCPServer::schrijfNaarDeurUit(){
+void TCPServer::schrijfNaarDeurUit_NOOD(){
     s4.schrijfCommando(0);
   //  std::cout << "deur is dicht\n";
+}
+void TCPServer::schrijfNaarDeurTempAan(){
+    s4.schrijfCommando(2);
+}
+void TCPServer::schrijfNaarDeurUit_Temp(){
+    s4.schrijfCommando(3);
 }
