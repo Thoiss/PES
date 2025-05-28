@@ -1,5 +1,10 @@
-#include "globals.h"
+#include "Wemos_Code_Lite_dataOntvangenVersturen.h"
 #define deviceNaam " LITE"
+#define LED_PIN   D5
+#define RED_PIN   D6
+#define GREEN_PIN D7
+#define BLUE_PIN  D8
+
 void setRGBColor(int red, int green, int blue) {
   analogWrite(RED_PIN, red);
   analogWrite(GREEN_PIN, green);
@@ -8,8 +13,14 @@ void setRGBColor(int red, int green, int blue) {
 void ledUitZetten() {
   digitalWrite(LED_PIN, LOW);
 }
+void RGBAanzetten(){
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT);
+}
 
-void dataOntvangenVersturen() {
+void dataOntvangenVersturen(WiFiClient clients[]) {
   for (int i = 0; i < MAX_CLIENTS; i++) {
     if (clients[i] && clients[i].connected() && clients[i].available()) {
       String data = clients[i].readStringUntil('\n');
