@@ -1,5 +1,4 @@
 #include "pi_connection.hpp"
-#include "globals.h"
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -8,7 +7,7 @@
 #include <sys/time.h>
 #include <cstdio>
 #include <cstring>
-
+#include "wemos_aansturen.hpp"
 int PiConnection::connectToPi(const char *ip, int port)
 {
     int sock;
@@ -58,8 +57,9 @@ int PiConnection::connectToPi(const char *ip, int port)
     return sock;
 }
 
-int PiConnection::verlichtingwaarde()
+int PiConnection::encoderVerlichting(int socket[])
 {
+    WemosAansturen aanstuurder;
     int retry = 0;
     if (pi_a_socket <= 0)
     {
@@ -76,7 +76,6 @@ int PiConnection::verlichtingwaarde()
     {
         usleep(250000); // 250 ms
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
-        printf("Ontvangen voor PiA:%d\n", valread);
         buffer[valread] = '\0';
         printf("Ontvangen PiA:%s\n", buffer);
         retry++;
@@ -94,16 +93,64 @@ int PiConnection::verlichtingwaarde()
         Versturen = true;
         statusVerlichting = !statusVerlichting;
         printf("statusVerlichting: %d\n", statusVerlichting);
+        
     }
     // verlictingswaarde wordt alleen verstuurd wanneer deze veranderd is
     token = strtok(nullptr, "-");
     verlichtingsWaarde = atoi(token);
     if (verlichtingsWaarde != oudVerlichtingswaarde)
     {
-        oudVerlichtingswaarde = verlichtingsWaarde;
         Versturen = true;
-        RGBWaarde = verlichtingsWaarde;
+        verlichtingsWaarde = verlichtingsWaarde *2;
+        oudVerlichtingswaarde = verlichtingsWaarde;
         printf("Verlichtingswaarde: %d\n", verlichtingsWaarde);
+    }
+    if (Versturen){
+        aanstuurder.stuurWemosAan(socket[1], 1,statusVerlichting, verlichtingsWaarde, Versturen ); // Aansturen van Wemos 1
+    }
+    memset(buffer, 0, sizeof(buffer));
+    return 0;
+}
+
+int PiConnection::routeVerlichting(int socket[])
+{
+    WemosAansturen routeAanstuurder;
+    int retry = 0;
+    if (pi_a_socket <= 0)
+    {
+        return -1;
+    }
+
+    const char *PiVerlichting = "routeVerlichting";
+    memset(buffer, 0, sizeof(buffer));
+    send(pi_a_socket, PiVerlichting, strlen(PiVerlichting), 0);
+    int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+    buffer[valread] = '\0';
+    printf("Ontvangen PiA:%s\n", buffer);
+    while (retry <= 15 && valread <= 0)
+    {
+        usleep(250000); // 250 ms
+        valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+        buffer[valread] = '\0';
+        printf("Ontvangen PiA:%s\n", buffer);
+        retry++;
+    }
+    if (valread <= 0 || buffer == "niet correct ontvangen")
+    {
+        printf("Niks binnen\n");
+        return -1;
+    }
+    // statusRouteVerlichting wordt een toggle op 1
+    int statusRouteVerlichting = atoi(token);
+    if (statusRouteVerlichting == 1)
+    {
+        Versturen = true;
+        statusRouteVerlichting = !statusRouteVerlichting;
+        printf("routeVerlichting: %d\n", statusRouteVerlichting);
+        
+    }
+    if (Versturen){
+        routeAanstuurder.routeWemos(socket[1], 1,statusRouteVerlichting, Versturen ); // Aansturen van Wemos 1
     }
     memset(buffer, 0, sizeof(buffer));
     return 0;
