@@ -72,6 +72,7 @@ int PiConnection::encoderVerlichting(int socket[])
     int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
     buffer[valread] = '\0';
     printf("Ontvangen PiA:%s\n", buffer);
+
     while (retry <= 15 && valread <= 0)
     {
         usleep(250000); // 250 ms
@@ -80,34 +81,51 @@ int PiConnection::encoderVerlichting(int socket[])
         printf("Ontvangen PiA:%s\n", buffer);
         retry++;
     }
-    if (valread <= 0 || buffer == "niet correct ontvangen")
+
+    if (valread <= 0 || strcmp(buffer, "niet correct ontvangen") == 0)
     {
         printf("Niks binnen\n");
         return -1;
     }
-    char *token = strtok(buffer, "-"); // Parse until the first -
-    // statusVerlichting wordt een toggle op 1
+
+    char *token = strtok(buffer, "-");
+    if (token == nullptr)
+    {
+        printf("Kan eerste veld niet lezen uit buffer: %s\n", buffer);
+        return -1;
+    }
+
     int verlichtingStatus = atoi(token);
+
+    token = strtok(nullptr, "-");
+    if (token == nullptr)
+    {
+        printf("Kan tweede veld niet lezen uit buffer: %s\n", buffer);
+        return -1;
+    }
+
+    verlichtingsWaarde = atoi(token);
+
     if (verlichtingStatus == 1)
     {
         Versturen = true;
         statusVerlichting = !statusVerlichting;
         printf("statusVerlichting: %d\n", statusVerlichting);
-        
     }
-    // verlictingswaarde wordt alleen verstuurd wanneer deze veranderd is
-    token = strtok(nullptr, "-");
-    verlichtingsWaarde = atoi(token);
+
     if (verlichtingsWaarde != oudVerlichtingswaarde)
     {
         Versturen = true;
-        verlichtingsWaarde = verlichtingsWaarde *2;
+        verlichtingsWaarde = verlichtingsWaarde * 2;
         oudVerlichtingswaarde = verlichtingsWaarde;
         printf("Verlichtingswaarde: %d\n", verlichtingsWaarde);
     }
-    if (Versturen){
-        aanstuurder.stuurWemosAan(socket[1], 1,statusVerlichting, verlichtingsWaarde, Versturen ); // Aansturen van Wemos 1
+
+    if (Versturen)
+    {
+        aanstuurder.stuurWemosAan(socket[1], 1, statusVerlichting, verlichtingsWaarde, Versturen);
     }
+
     memset(buffer, 0, sizeof(buffer));
     return 0;
 }
@@ -153,5 +171,33 @@ int PiConnection::routeVerlichting(int socket[])
         routeAanstuurder.routeWemos(socket[1], 1,statusRouteVerlichting, Versturen ); // Aansturen van Wemos 1
     }
     memset(buffer, 0, sizeof(buffer));
+    return 0;
+}
+int PiConnection::ontvangTemperatuurData()
+{
+    if (pi_a_socket <= 0) {
+        printf("Socket niet verbonden.\n");
+        return -1;
+    }
+
+    const char *tempRequest = "getTemp";
+    memset(buffer, 0, sizeof(buffer));
+
+    // Stuur commando naar server
+    if (send(pi_a_socket, tempRequest, strlen(tempRequest), 0) < 0) {
+        perror("Send mislukt");
+        return -1;
+    }
+
+    // Wacht op antwoord
+    int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+    if (valread <= 0) {
+        perror("Fout bij lezen van server");
+        return -1;
+    }
+
+    buffer[valread] = '\0';
+    printf("Temperatuurgegevens ontvangen van server: %s\n", buffer);
+
     return 0;
 }

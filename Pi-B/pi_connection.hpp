@@ -30,5 +30,6 @@ private:
     int verlichtingsWaarde = 0;
     int oudVerlichtingswaarde = 0;  
     int statusRouteVerlichting = 0;
+    int ontvangTemperatuurData();  
 };
 #endif
