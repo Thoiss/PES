@@ -51,11 +51,11 @@ uint8_t RX_Buffer [1] ;
 char buffer[20];
 char tekstbuffer[50];
 char Test[] = "test\n";
+char Verstuurd[] = "Verstuurd\n";
 uint32_t rawCounter = 0;
 uint32_t delay = 200;
 uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
 uint8_t servoKnop = 0;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -107,17 +107,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
   	HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
 		rawCounter = counterLezen();
-		if(knopStatus == 0){
 		knopStatus = encoderKnopLezen();
-		}
-
 		if(servoKnop == 0){
 		servoKnop = servoKnopLezen();
 		}
@@ -381,6 +377,7 @@ if(RX_Buffer [0]== 1){
   	        }
 
 }
+
 else if(RX_Buffer [0]== 2){
 
   	        uint8_t commando = RX_Buffer[0];
@@ -390,9 +387,10 @@ else if(RX_Buffer [0]== 2){
   	        {
   	            // stuur de gevraagde byte terug
   	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &knopStatus, 1);
-//  	          HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
+  	        HAL_UART_Transmit(&huart2, (uint8_t*) Verstuurd, strlen(Verstuurd), 1000);
 
   	        }
+  	      knopStatus =0;
 
 }
 else if(RX_Buffer [0]== 3){
@@ -410,7 +408,7 @@ else if(RX_Buffer [0]== 3){
 }
 else if(RX_Buffer [0]== 4){
 	servoKnop = 0;
-	knopStatus =0;
+	//knopStatus =0;
 	HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
 }
     HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);

@@ -1,4 +1,4 @@
-//g++ main.cpp *.cpp -o main -lwiringPi -lmariadb
+//g++ *.cpp -o main -lwiringPi -lmariadb
 
 #include "TCPServer.h"
 #include <iostream>
