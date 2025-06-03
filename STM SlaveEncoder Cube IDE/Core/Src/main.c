@@ -55,6 +55,7 @@ char Verstuurd[] = "Verstuurd\n";
 uint32_t rawCounter = 0;
 uint32_t delay = 200;
 uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
+int bufferknop =0;
 uint8_t servoKnop = 0;
 /* USER CODE END PV */
 
@@ -114,6 +115,9 @@ int main(void)
 	while (1) {
 		rawCounter = counterLezen();
 		knopStatus = encoderKnopLezen();
+		if (knopStatus ==1){
+			bufferknop =1;
+		}
 		if(servoKnop == 0){
 		servoKnop = servoKnopLezen();
 		}
@@ -386,11 +390,11 @@ else if(RX_Buffer [0]== 2){
   	        if (commando >= 1 && commando <= 4)
   	        {
   	            // stuur de gevraagde byte terug
-  	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &knopStatus, 1);
+  	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &bufferknop, 1);
   	        HAL_UART_Transmit(&huart2, (uint8_t*) Verstuurd, strlen(Verstuurd), 1000);
 
   	        }
-  	      knopStatus =0;
+  	      bufferknop =0;
 
 }
 else if(RX_Buffer [0]== 3){
