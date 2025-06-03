@@ -52,7 +52,11 @@ TIM_HandleTypeDef htim16;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-int status = 0;
+int status = 10;
+int isopen = 0;
+int noodknop = 0;
+uint32_t DICHT = 500;
+uint32_t OPEN = 2500;
 uint8_t RX_Buffer[1];
 //uint8_t RX_Buffer [1] ; // DATA to receive
 /* USER CODE END PV */
@@ -135,34 +139,47 @@ int main(void)
 //	  }
 
 
-		if (status == 1) {
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);
-			HAL_Delay(2000);
+		if (status == 1 && noodknop == 0) { //noodknop == 0 als dat weg is overal zou noodknop moeten werken
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, OPEN); //rfid sluis open en dicht
+			HAL_Delay(3000);
 			HAL_UART_Transmit(&huart2, (uint8_t*)test2, strlen(test2), HAL_MAX_DELAY);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, DICHT);
 			//__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
-			status = 0;
+			HAL_Delay(1000);
+			if (isopen == 0){
+				__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, OPEN);
+				HAL_Delay(3000);
+				__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, DICHT);
+			}
+			status = 10; //aangepast met lennard
 		}
 
 		else if (status == 0) {
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, OPEN); // buitendeur moet open zijn zodat mensen naar buiten kunnen lopen
+			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, DICHT); //binnendeur moet dich wanneer noodknop wordt ingedrukt zodat mensen niet naar binnen kunnen
+			noodknop = 1;
 		}
 
-		else if (status == 2) {
+		else if (status == 2 && noodknop == 0) {
 			HAL_UART_Transmit(&huart2, (uint8_t*)test, strlen(test), HAL_MAX_DELAY);
-			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, 2500);
+			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, OPEN); // temperatuur sluis
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, OPEN); // rfid sluis
 			HAL_Delay(2000);
+			isopen = 1;
 		}
 
-		else if (status == 3) {
-			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, 500);
+		else if (status == 3 && noodknop == 0) {
+			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, DICHT); //temperatuur sluis
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, DICHT); // rfid sluis
 			HAL_Delay(2000);
+			isopen = 0;
 		}
 
-//	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);//2500
-//	  HAL_Delay(1000);  // Wacht 1 seconde
+		else if (status == 10 && noodknop == 0) {
+					__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, DICHT); //wanneer code wordt gestard lijkt mij logisch dat beide servos dicht zijn
+					__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, DICHT);
+				}
 
-//	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500);//500
-//	  HAL_Delay(1000);  // Wacht 1 seconde
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -478,7 +495,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA3 */
   GPIO_InitStruct.Pin = GPIO_PIN_3;
@@ -530,6 +557,16 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
 	}
 	HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
 
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin == GPIO_PIN_3 && noodknop == 0) {
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+	  noodknop = 1;
+	  status = 0;
+  }
+  //else maken voor baliemedewerker later
 }
 /* USER CODE END 4 */
 
