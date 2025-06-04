@@ -422,6 +422,22 @@ else if(RX_Buffer [0]== 4){
 	//knopStatus =0;
 	HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
 }
+
+else if(RX_Buffer [0]== 5){
+
+//  	        uint8_t commando = RX_Buffer[0];
+//
+//  	        // Check welk byte de master wil (1..4)
+//  	        if (commando >= 1 && commando <= 4)
+//  	        {
+//  	            // stuur de gevraagde byte terug
+  	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &reset_noodknop_status, 1);
+////  	        HAL_UART_Transmit(&huart2, (uint8_t*) Verstuurd, strlen(Verstuurd), 1000);
+//
+//  	        }
+  	      reset_noodknop_status =0;
+
+}
     HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
 
 }
