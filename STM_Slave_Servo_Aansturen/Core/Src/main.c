@@ -178,7 +178,12 @@ int main(void)
 		else if (status == 10 && noodknop == 0) {
 					__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, DICHT); //wanneer code wordt gestard lijkt mij logisch dat beide servos dicht zijn
 					__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, DICHT);
-				}
+		}
+		else if (status == 4&& noodknop ==1){
+			noodknop = 0;
+			status = 10;
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+		}
 
     /* USER CODE END WHILE */
 
@@ -552,7 +557,15 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
 					char msg4[] = "Ontvangen: 3\r\n";
 					HAL_UART_Transmit(&huart2, (uint8_t*)msg4, strlen(msg4), HAL_MAX_DELAY);
 					status = 3;
-				}
+		}
+		else if(RX_Buffer[0] == 4){
+			char msg5[] = "Ontvangen: 4\r\n";
+			HAL_UART_Transmit(&huart2, (uint8_t*)msg5, strlen(msg5), HAL_MAX_DELAY);
+			status = 4;
+		}
+		else if(RX_Buffer[0] == 5){
+			HAL_I2C_Slave_Transmit_IT(&hi2c1, &noodknop, 1);
+		}
 
 	}
 	HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
@@ -565,8 +578,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 	  noodknop = 1;
 	  status = 0;
+	  char msg2[] = "Ontvangen: 0\r\n";
+	  HAL_UART_Transmit(&huart2, (uint8_t*)msg2, strlen(msg2), HAL_MAX_DELAY);
+	  HAL_I2C_Slave_Transmit_IT(&hi2c1, &noodknop, 1);
   }
-  //else maken voor baliemedewerker later
 }
 /* USER CODE END 4 */
 

@@ -59,6 +59,7 @@ uint32_t delay = 200;
 uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
 uint8_t servoKnop = 0;
 uint8_t reset_noodknop_status = 0;
+uint8_t noodknoplamp = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -119,6 +120,8 @@ int main(void)
 			if(reset_noodknop_status == 1){
 				HAL_UART_Transmit(&huart2, (uint8_t*) noodknop, strlen(noodknop), 1000);
 				reset_noodknop_status = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin);
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+				noodknoplamp = 0;
 			}
 			else{
 				HAL_UART_Transmit(&huart2, (uint8_t*) geen_noodknop, strlen(geen_noodknop), 1000);
@@ -127,6 +130,10 @@ int main(void)
 		knopStatus = encoderKnopLezen();
 		if(servoKnop == 0){
 		servoKnop = servoKnopLezen();
+		}
+		if (noodknoplamp == 1){
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+			HAL_UART_Transmit(&huart2, (uint8_t*) "lamp moet aan zijn", strlen("lamp moet aan zijn"), 1000);
 		}
 //		snprintf(tekstbuffer, sizeof(tekstbuffer), "Knop: %d, Positie: %ld ServoKnop: %d\r\n", knopStatus, rawCounter, servoKnop);
 //		HAL_UART_Transmit(&huart2, (uint8_t*) tekstbuffer, strlen(tekstbuffer), 1000);
@@ -435,8 +442,11 @@ else if(RX_Buffer [0]== 5){
 ////  	        HAL_UART_Transmit(&huart2, (uint8_t*) Verstuurd, strlen(Verstuurd), 1000);
 //
 //  	        }
-  	      reset_noodknop_status =0;
+//  	      reset_noodknop_status =0;
 
+}
+else if(RX_Buffer [0]== 6){
+	noodknoplamp = 1;
 }
     HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
 
