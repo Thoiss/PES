@@ -75,16 +75,17 @@ int PiConnection::encoderVerlichting(int socket[])
 
     while (retry <= 15 && valread <= 0)
     {
+        memset(buffer, 0, sizeof(buffer));
         usleep(250000); // 250 ms
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
         buffer[valread] = '\0';
-        printf("Ontvangen PiA:%s\n", buffer);
+        printf("Encoder verlichting ontvangen PiA:%s\n", buffer);
         retry++;
     }
 
     if (valread <= 0 || strcmp(buffer, "niet correct ontvangen") == 0)
     {
-        printf("Niks binnen\n");
+        printf("Geen encoder bericht binnen\n");
         return -1;
     }
 
@@ -144,60 +145,85 @@ int PiConnection::routeVerlichting(int socket[])
     send(pi_a_socket, PiVerlichting, strlen(PiVerlichting), 0);
     int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
     buffer[valread] = '\0';
-    printf("Ontvangen PiA:%s\n", buffer);
+    printf("Route verlichting ontvangen PiA:%s\n", buffer);
     while (retry <= 15 && valread <= 0)
     {
         usleep(250000); // 250 ms
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
         buffer[valread] = '\0';
-        printf("Ontvangen PiA:%s\n", buffer);
+        printf("Ontvangen PiA: %s\n", buffer);
         retry++;
     }
     if (valread <= 0 || buffer == "niet correct ontvangen")
     {
-        printf("Niks binnen\n");
+        printf("Geen routeVerlichting bericht binnen\n");
         return -1;
     }
     // statusRouteVerlichting wordt een toggle op 1
-    int statusRouteVerlichting = atoi(token);
+    int statusRouteVerlichting = atoi(buffer);
+    printf("statusRouteVerlichting PiA:%d\n", statusRouteVerlichting);
     if (statusRouteVerlichting == 1)
     {
         Versturen = true;
-        statusRouteVerlichting = !statusRouteVerlichting;
-        printf("routeVerlichting: %d\n", statusRouteVerlichting);
-        
     }
     if (Versturen){
         routeAanstuurder.routeWemos(socket[1], 1,statusRouteVerlichting, Versturen ); // Aansturen van Wemos 1
-    }
+    }   
     memset(buffer, 0, sizeof(buffer));
     return 0;
 }
-int PiConnection::ontvangTemperatuurData()
+int PiConnection::ontvangTemperatuurData(char* outputBuffer, size_t bufSize)
 {
     if (pi_a_socket <= 0) {
         printf("Socket niet verbonden.\n");
         return -1;
     }
 
-    const char *tempRequest = "getTemp";
+    const char *tempRequest = "temperatuur";
     memset(buffer, 0, sizeof(buffer));
 
-    // Stuur commando naar server
+    // 30-second delay before sending
+    //printf("Wacht 30 seconden voor het versturen van het temperatuurverzoek...\n");
+   // sleep(30);
+
     if (send(pi_a_socket, tempRequest, strlen(tempRequest), 0) < 0) {
         perror("Send mislukt");
         return -1;
     }
 
-    // Wacht op antwoord
-    int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+    int valread = 0;
+    int retry = 0;
+    while (retry <= 15) {
+        valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+        if (valread > 0) break;
+
+        usleep(250000); // 250 ms wachten
+        retry++;
+    }
+
     if (valread <= 0) {
-        perror("Fout bij lezen van server");
+        perror("Fout bij lezen van server (na retries)");
         return -1;
     }
 
     buffer[valread] = '\0';
     printf("Temperatuurgegevens ontvangen van server: %s\n", buffer);
+
+    float tempBinnen = 0, tempBuiten = 0;
+
+    // Adjusted parsing to only get temperature values
+    int parsed = sscanf(buffer,
+        "Binnen: %f °C, %*f %% RV | Buiten: %f °C, %*f %% RV",
+        &tempBinnen, &tempBuiten);
+
+    if (parsed != 2) {
+        printf("Kan temperatuurvelden niet correct parsen uit buffer: %s\n", buffer);
+        return -1;
+    }
+
+    // Only include temperature values in the output
+    snprintf(outputBuffer, bufSize, "%.1f | %.1f",
+             tempBinnen, tempBuiten);
 
     return 0;
 }

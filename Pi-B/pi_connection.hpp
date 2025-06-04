@@ -19,7 +19,7 @@ public:
     int connectToPi(const char* ip, int port);
     int encoderVerlichting(int socket[]);
     int routeVerlichting(int socket[]);
-
+    int ontvangTemperatuurData(char* outputBuffer, size_t bufSize);
 private:
     int pi_a_socket = 0;  
     int statusServo = 0;
@@ -30,6 +30,6 @@ private:
     int verlichtingsWaarde = 0;
     int oudVerlichtingswaarde = 0;  
     int statusRouteVerlichting = 0;
-    int ontvangTemperatuurData();  
+     
 };
 #endif

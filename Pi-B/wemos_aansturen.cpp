@@ -1,7 +1,6 @@
 #include "wemos_aansturen.hpp"
 
 WemosAansturen::WemosAansturen()
-    : tellerdevices(0)
 {
     memset(versturenbuffer, 0, sizeof(versturenbuffer));
 }
@@ -12,7 +11,6 @@ int WemosAansturen::stuurWemosAan(int socket, int deviceIndex, int statusVerlich
     {
         if (deviceIndex == 1){
             printf("Socket correct\n");
-            tellerdevices++;
             snprintf(RGBSend, sizeof(RGBSend),"%d - %d - RGBWAARDE\n",statusVerlichting, verlichtingsWaarde);
             send(socket, RGBSend, strlen(RGBSend), 0);
             Versturen = false;
@@ -30,8 +28,8 @@ int WemosAansturen::routeWemos(int socket, int deviceIndex, int statusRouteVerli
     {
         if (deviceIndex == 1){
             printf("Socket correct\n");
-            tellerdevices++;
-            snprintf(routeSend, sizeof(routeSend),"routeVerlichting: %d \n",statusRouteVerlichting);
+            snprintf(routeSend, sizeof(routeSend),"%d\n",statusRouteVerlichting);
+            printf("%s\n", routeSend);
             send(socket, routeSend, strlen(routeSend), 0);
             Versturen = false;
         }

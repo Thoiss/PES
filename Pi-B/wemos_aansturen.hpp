@@ -15,7 +15,6 @@ public:
     int routeWemos(int socket, int deviceIndex, int statusRouteVerlichting, bool Versturen);
 
 private:
-    int tellerdevices;
     char versturenbuffer[1024];
     char RGBSend[30];
     char routeSend[30];
