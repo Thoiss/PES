@@ -52,10 +52,13 @@ char buffer[20];
 char tekstbuffer[50];
 char Test[] = "test\n";
 char Verstuurd[] = "Verstuurd\n";
+char noodknop[] = "knop is ingedrukt\n\r";
+char geen_noodknop[] = "nee\n\r";
 uint32_t rawCounter = 0;
 uint32_t delay = 200;
 uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
 uint8_t servoKnop = 0;
+uint8_t reset_noodknop_status = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -112,6 +115,14 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
+		reset_noodknop_status = !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
+			if(reset_noodknop_status == 1){
+				HAL_UART_Transmit(&huart2, (uint8_t*) noodknop, strlen(noodknop), 1000);
+				reset_noodknop_status = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin);
+			}
+			else{
+				HAL_UART_Transmit(&huart2, (uint8_t*) geen_noodknop, strlen(geen_noodknop), 1000);
+			}
 		rawCounter = counterLezen();
 		knopStatus = encoderKnopLezen();
 		if(servoKnop == 0){
@@ -340,11 +351,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(Knop_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : servoKnop_Pin */
-  GPIO_InitStruct.Pin = servoKnop_Pin;
+  /*Configure GPIO pins : servoKnop_Pin reset_noodknop_Pin */
+  GPIO_InitStruct.Pin = servoKnop_Pin|reset_noodknop_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(servoKnop_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

@@ -61,6 +61,8 @@ void Error_Handler(void);
 #define Knop_GPIO_Port GPIOA
 #define servoKnop_Pin GPIO_PIN_8
 #define servoKnop_GPIO_Port GPIOA
+#define reset_noodknop_Pin GPIO_PIN_11
+#define reset_noodknop_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
