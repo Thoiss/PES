@@ -18,6 +18,10 @@ private:
     int statusverlichting = 0;
     int verlichtingwaarde = 0;
     int statusservo = 0;
+    int reset_noodknop_status;
+    int noodknop_status;
+    bool verlichtinglezen = false;
+    int verlichtinglezenstatus = 0;
     std::vector<int> client_sockets_;
     Slave& s1;
     Slave& s2;
@@ -37,7 +41,11 @@ private:
     void schrijfNaarDeur_RFID();
     void schrijfNaarDeurUit_NOOD(); 
     void schrijfNaarDeurTempAan();
-    void schrijfNaarDeurUit_Temp(); 
+    void schrijfNaarDeurUit_Temp();
+    void reset_noodknop(); 
+    void opvragen_reset_noodknop_status();
+    void lampaansturen();
+    float tempInside_, tempOutside_, humInside_, humOutside_;
 };
 
 #endif
