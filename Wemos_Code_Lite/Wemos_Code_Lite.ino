@@ -23,8 +23,8 @@ void setup() {
   Serial.print("IP Adres: ");
   Serial.println(WiFi.localIP());
   server.begin();
-  RGBAanzetten();
-
+  RGB1Aanzetten();
+  RGB2Aanzetten();
 }
 
 void loop() {

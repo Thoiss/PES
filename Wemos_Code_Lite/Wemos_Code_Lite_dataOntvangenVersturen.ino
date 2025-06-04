@@ -1,23 +1,29 @@
 #include "Wemos_Code_Lite_dataOntvangenVersturen.h"
 #define deviceNaam " LITE"
-#define LED_PIN   D5
-#define RED_PIN   D6
-#define GREEN_PIN D7
-#define BLUE_PIN  D8
 
-void setRGBColor(int red, int green, int blue) {
-  analogWrite(RED_PIN, red);
-  analogWrite(GREEN_PIN, green);
-  analogWrite(BLUE_PIN, blue);
+void setRGB1Color(int red, int green, int blue) {
+  analogWrite(RED_PIN_1, red);
+  analogWrite(GREEN_PIN_1, green);
+  analogWrite(BLUE_PIN_1, blue);
 }
-void ledUitZetten() {
-  digitalWrite(LED_PIN, LOW);
+
+void setRGB2Color(int red, int green, int blue) {
+  analogWrite(RED_PIN_2, red);
+  analogWrite(GREEN_PIN_2, green);
+  analogWrite(BLUE_PIN_2, blue);
 }
-void RGBAanzetten(){
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(RED_PIN, OUTPUT);
-  pinMode(GREEN_PIN, OUTPUT);
-  pinMode(BLUE_PIN, OUTPUT);
+
+
+void RGB1Aanzetten(){
+  pinMode(RED_PIN_1, OUTPUT);
+  pinMode(GREEN_PIN_1, OUTPUT);
+  pinMode(BLUE_PIN_1, OUTPUT);
+}
+
+void RGB2Aanzetten(){
+  pinMode(RED_PIN_2, OUTPUT);
+  pinMode(GREEN_PIN_2, OUTPUT);
+  pinMode(BLUE_PIN_2, OUTPUT);
 }
 
 void dataOntvangenVersturen(WiFiClient clients[]) {
@@ -39,9 +45,13 @@ void dataOntvangenVersturen(WiFiClient clients[]) {
         clients[i].stop();
         clients[i] = WiFiClient();
       }
-      if (data == "1") { // klopt mogelijk niet, weet niet precies wat het binnenkomend bericht is vanaf Pi A.
-        Serial.println("RGB LED uit");
-        setRGBColor(0, 0, 0);
+      if (data == "1") {
+        Serial.println("Verlichting uit");
+        setRGB2Color(waarde / 6, waarde / 6, waarde / 6);
+        delay(1500);
+        waarde = waarde / 3;
+        setRGB1Color(waarde, waarde, waarde);
+        delay(1500);
       }
       //RGBWAARDE
       else if (data.indexOf("RGBWAARDE") != -1) {
@@ -53,7 +63,7 @@ void dataOntvangenVersturen(WiFiClient clients[]) {
           String waardeStr = data.substring(firstDash + 3, secondDash);
 
           int status = statusStr.toInt();
-          int waarde = waardeStr.toInt();
+          waarde = waardeStr.toInt();
 
           Serial.print("Status verlichting: ");
           Serial.println(status);
@@ -61,10 +71,12 @@ void dataOntvangenVersturen(WiFiClient clients[]) {
           Serial.println(waarde);
 
           if (status == 1) {
-            setRGBColor(waarde, waarde, waarde);
+            setRGB1Color(waarde, waarde, waarde);
+            setRGB2Color(waarde, waarde, waarde);
           } else {
             Serial.println("Verlichting uit of genegeerd.");
-            setRGBColor(0, 0, 0);
+            setRGB1Color(0, 0, 0);
+            setRGB2Color(0, 0 ,0);
           }
         }
       }
