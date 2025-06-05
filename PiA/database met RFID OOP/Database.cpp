@@ -161,20 +161,20 @@ std::string Database::checkGebruiker(const std::string& card_uid) {
 int Database::checkLichtStatus(const std::string& card_uid) {
     if (!conn) {
         std::cerr << "Database niet geïnitialiseerd.\n";
-        return "";
+        return -1;
     }
 
     std::string query = "SELECT licht FROM users WHERE card_uid = '" + card_uid + "'";
 
     if (mysql_query(conn, query.c_str())) {
         std::cerr << "Select query mislukt: " << mysql_error(conn) << std::endl;
-        return "";
+        return -1;
     }
 
     MYSQL_RES* res = mysql_store_result(conn);
     if (!res) {
         std::cerr << "Resultaten ophalen mislukt: " << mysql_error(conn) << std::endl;
-        return "";
+        return -1;
     }
 
     MYSQL_ROW row = mysql_fetch_row(res);

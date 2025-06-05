@@ -10,8 +10,9 @@
 #include "SHT3XSensor.h"
 #include "I2CDevice.h"
 
-TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave &s2, Slave &s3, Slave &s4)
-    : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2), s3(s3), s4(s4){}
+TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave& s2, Slave& s3, Slave& s4)
+    : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2), s3(s3), s4(s4),
+      tempInside_(0.0f), tempOutside_(0.0f), humInside_(0.0f), humOutside_(0.0f) {}
 
 void TCPServer::setupSocket() {
     server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -49,9 +50,8 @@ void TCPServer::setupSocket() {
 void TCPServer::run() {
     setupSocket();
 
-    // Temperatuursensoren initialiseren
-    SHT3XSensor insideSensor(0x44);   // Binnen
-    SHT3XSensor outsideSensor(0x45);  // Buiten
+    SHT3XSensor insideSensor(0x44);
+    SHT3XSensor outsideSensor(0x45);
     bool deurAlOpen = false;
 
     if (!insideSensor.openDevice() || !outsideSensor.openDevice()) {
@@ -60,43 +60,31 @@ void TCPServer::run() {
     }
 
     while (true) {
-        // Lees temperatuur
-        float tempInside = 0.0f, humInside = 0.0f;
-        float tempOutside = 0.0f, humOutside = 0.0f;
-
-        bool insideRead = insideSensor.readTemperatureAndHumidity(tempInside, humInside);
-        bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside, humOutside);
+        bool insideRead = insideSensor.readTemperatureAndHumidity(tempInside_, humInside_);
+        bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside_, humOutside_);
 
         if (insideRead && outsideRead) {
-    std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
+            std::cout << "Binnen: " << tempInside_ << " °C, Buiten: " << tempOutside_ << " °C\n";
 
-    if (insideRead && outsideRead) {
-        std::cout << "Binnen: " << tempInside << " °C, Buiten: " << tempOutside << " °C\n";
-
-        if (tempInside > 26.0f && tempOutside < tempInside && !deurAlOpen) {
-            schrijfNaarDeurTempAan();
-            deurAlOpen = true;
-            std::cout << "Deur open vanwege temperatuur\n";
+            if (tempInside_ > 27.0f && tempOutside_ < tempInside_ && !deurAlOpen) {//dit was 26 f
+                schrijfNaarDeurTempAan();
+                deurAlOpen = true;
+                std::cout << "Deur open vanwege temperatuur\n";
+            }
+            else if (tempInside_ < 26.0f && deurAlOpen) {//dit was 25 f
+                schrijfNaarDeurUit_Temp();
+                deurAlOpen = false;
+                std::cout << "Deur dicht vanwege temperatuur\n";
+            }
         }
-        else if (tempInside < 25.0f && deurAlOpen) {
-            schrijfNaarDeurUit_Sluis();
-            deurAlOpen = false;
-            std::cout << "Deur dicht vanwege temperatuur\n";
-        }
-    }
-}
 
-        // Uitvoering van bestaande logica
-        // schrijfNaarDeurUit();     // stuur deur dicht commando
-        verwerkKaart();           // verwerk RFID kaart
-        waardeVerlichting();      // lees helderheid
-        standVerlichting();       // lees status verlichting
-        standservo();             // lees status servo
+        verwerkKaart();
+        waardeVerlichting();
+        standVerlichting();
+        standservo();
+        opvragen_reset_noodknop_status();
+        // lampaansturen();
 
-        int personen = db.tellerUniekePersonen();
-        std::cout << "personen: " << personen << "\n";
-
-        // TCP socket handling
         fd_set readfds;
         FD_ZERO(&readfds);
         FD_SET(server_fd_, &readfds);
@@ -111,7 +99,7 @@ void TCPServer::run() {
 
         struct timeval timeout;
         timeout.tv_sec = 0;
-        timeout.tv_usec = 100000; // 100ms select timeout
+        timeout.tv_usec = 100000;
 
         int activity = select(max_sd + 1, &readfds, nullptr, nullptr, &timeout);
 
@@ -126,11 +114,9 @@ void TCPServer::run() {
         handleClientActivity(readfds);
     }
 
-    // Sensoren afsluiten (alleen bereikt bij break/exit, anders oneindige loop)
     insideSensor.closeDevice();
     outsideSensor.closeDevice();
 }
-
 
 void TCPServer::acceptNewClient() {
     sockaddr_in address;
@@ -140,7 +126,6 @@ void TCPServer::acceptNewClient() {
     if (new_socket >= 0) {
         fcntl(new_socket, F_SETFL, O_NONBLOCK);
         client_sockets_.push_back(new_socket);
-  //      std::cout << "Nieuwe client verbonden!\n";
     }
 }
 
@@ -153,7 +138,6 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
         if (FD_ISSET(sd, &readfds)) {
             int valread = read(sd, buffer, sizeof(buffer) - 1);
             if (valread <= 0) {
-          //      std::cout << "Client " << sd << " heeft de verbinding verbroken\n";
                 close(sd);
                 it = client_sockets_.erase(it);
                 continue;
@@ -161,7 +145,6 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
 
             buffer[valread] = '\0';
             std::string message(buffer);
-        //    std::cout << "Client ontvangen: " << message << "\n";
             handleClientMessage(sd, message);
         }
 
@@ -170,89 +153,133 @@ void TCPServer::handleClientActivity(fd_set& readfds) {
 }
 
 void TCPServer::handleClientMessage(int client_fd, const std::string& message) {
-    if (message == "Statusroute") {
-        std::cout << "Status ontvangen\n";
-        sendMessage(client_fd, statusroute);
-        statusroute = 0;
-        }
+    if (message == "routeVerlichting") {
+        std::cout << "Routeverlichting ontvangen\n";
+        std::string statusRouteStr = std::to_string(routeVerlichting);
+        sendMessage(client_fd, statusRouteStr);
+        routeVerlichting = 0;
+    }
     else if (message == "STMEncoder") {
-        std::string encoderVerlichting = 
-        std::to_string(statusverlichting) + "-" + 
-        std::to_string(verlichtingwaarde);
-        std::cout << encoderVerlichting<< "\n";
+        std::string encoderVerlichting =
+            std::to_string(statusverlichting) + "-" +
+            std::to_string(verlichtingwaarde);
+        std::cout << encoderVerlichting << "\n";
         sendMessage(client_fd, encoderVerlichting);
-        }
+        statusverlichting = 0;
+         std::cout << "STM Encoder data verstuurd" << encoderVerlichting << std::endl;
+    }
+    else if (message == "temperatuur") {
+        std::string tempStr =
+            "Binnen: " + std::to_string(tempInside_) + " °C, " +
+            std::to_string(humInside_) + " % RV | " +
+            "Buiten: " + std::to_string(tempOutside_) + " °C, " +
+            std::to_string(humOutside_) + " % RV";
+        sendMessage(client_fd, tempStr);
+    }
+    else if (message == "persoon") {
+        int personen = db.tellerUniekePersonen();
+        std::cout << "personen: " << personen << "\n";
+
+        std::string tempPers = std::to_string(personen);
+        sendMessage(client_fd, tempPers);
+    }
     else {
         sendMessage(client_fd, "niet correct ontvangen");
+        std::cout << "Niet correct ontvangen verstuurd" << std::endl;
     }
 }
 
 void TCPServer::sendMessage(int client_fd, const std::string& message) {
     send(client_fd, message.c_str(), message.length(), 0);
 }
-void TCPServer::waardeVerlichting(){
-   s3.schrijfCommando(1);
-    char buf[16];
-verlichtingwaarde = s3.leesTerminal();
- //   std::cout << "Verlichting helderheid: " << verlichtingwaarde<< std::endl;
-//   sleep(1);
-  
+
+void TCPServer::waardeVerlichting() {
+    s3.schrijfCommando(1);
+    verlichtingwaarde = s3.leesTerminal();
 }
-void TCPServer::standVerlichting(){
+
+void TCPServer::standVerlichting() {
+    if (statusverlichting == 0 && verlichtinglezen == false) {
     s3.schrijfCommando(2);
-    char buf[16];
     statusverlichting = s3.leesTerminal();
-    std::cout << "Stand verlichting helderheid: " << statusverlichting<< std::endl;
-    // sleep(1);
+    }
+    if (statusverlichting ==1) {
+        verlichtinglezen = true;
+    } 
+    if (verlichtinglezen == true){
+        verlichtinglezenstatus ++;
+        if (verlichtinglezenstatus >= 10) {
+            verlichtinglezen = false;
+            verlichtinglezenstatus = 0;
+    }
 }
-void TCPServer::standservo(){
+    std::cout << "Stand verlichting helderheid: " << statusverlichting << std::endl;
+}
+
+void TCPServer::opvragen_reset_noodknop_status() {
+    s3.schrijfCommando(5);
+    reset_noodknop_status = s3.leesTerminal();
+    if (reset_noodknop_status == 1){
+        reset_noodknop();
+    }
+    std::cout << "status resetknop:  " << reset_noodknop_status << std::endl;
+}
+
+void TCPServer::standservo() {
     s3.schrijfCommando(3);
-    char buf[16];
     statusservo = s3.leesTerminal();
- //   std::cout << "Stand servo: " << statusservo<< std::endl;
-    // sleep(1);
     if (statusservo == 1) {
-        schrijfNaarDeuraan();
+        schrijfNaarDeur_RFID();
     }
     s3.schrijfCommando(4);
 }
+
 void TCPServer::verwerkKaart() {
-    s1.schrijfCommando(1);  // commando 1 om kaart te lezen
+    s1.schrijfCommando(1);
     int pasID = s1.leesKaart();
 
     if (pasID != 0 && pasID != -1) {
         std::string data = std::to_string(pasID);
         std::cout << "Kaart = " << data << std::endl;
-     //   schrijfNaarDeur();
 
         if (db.bestaatRfid(data)) {
             db.verwijderRfid(data);
-     //       std::cout << "UID verwijderd uit DB.\n";
         } else {
             std::string persoon = db.checkGebruiker(data);
-            statuspersoon = db.checkLichtStatus(data)
             if (persoon != "guest") {
-            schrijfNaarDeuraan();
-            //naam naar lichtkrant sturen
-            db.schrijvenrfid(data, persoon);
+                schrijfNaarDeur_RFID();
+                db.schrijvenrfid(data, persoon);
+                routeVerlichting = db.checkLichtStatus(data);
             }
-     //       std::cout << "UID toegevoegd aan DB.\n";
         }
-        //naar de I2C commando sturen voor openen deur
     }
 }
 
-void TCPServer::schrijfNaarDeur_RFID(){
+void TCPServer::schrijfNaarDeur_RFID() {
     s4.schrijfCommando(1);
-  //  std::cout << "deur is open\n";
 }
-void TCPServer::schrijfNaarDeurUit_NOOD(){
+
+void TCPServer::schrijfNaarDeurUit_NOOD() {
     s4.schrijfCommando(0);
-  //  std::cout << "deur is dicht\n";
 }
-void TCPServer::schrijfNaarDeurTempAan(){
+
+void TCPServer::schrijfNaarDeurTempAan() {
     s4.schrijfCommando(2);
 }
-void TCPServer::schrijfNaarDeurUit_Temp(){
+
+void TCPServer::schrijfNaarDeurUit_Temp() {
     s4.schrijfCommando(3);
+}
+
+void TCPServer::reset_noodknop() {
+    s4.schrijfCommando(4);
+}
+
+void TCPServer::lampaansturen(){
+    noodknop_status = 0;
+    s4.schrijfCommando(5);
+    noodknop_status = s4.leesTerminal();
+    if (noodknop_status == 1){
+        s3.schrijfCommando(6);
+    }
 }

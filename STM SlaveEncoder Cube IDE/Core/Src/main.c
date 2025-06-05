@@ -51,11 +51,15 @@ uint8_t RX_Buffer [1] ;
 char buffer[20];
 char tekstbuffer[50];
 char Test[] = "test\n";
+char Verstuurd[] = "Verstuurd\n";
+char noodknop[] = "knop is ingedrukt\n\r";
+char geen_noodknop[] = "nee\n\r";
 uint32_t rawCounter = 0;
 uint32_t delay = 200;
 uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
 uint8_t servoKnop = 0;
-
+uint8_t reset_noodknop_status = 0;
+uint8_t noodknoplamp = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -107,19 +111,29 @@ int main(void)
   /* USER CODE BEGIN 2 */
   	HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
+		reset_noodknop_status = !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
+			if(reset_noodknop_status == 1){
+				HAL_UART_Transmit(&huart2, (uint8_t*) noodknop, strlen(noodknop), 1000);
+				reset_noodknop_status = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin);
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+				noodknoplamp = 0;
+			}
+			else{
+				HAL_UART_Transmit(&huart2, (uint8_t*) geen_noodknop, strlen(geen_noodknop), 1000);
+			}
 		rawCounter = counterLezen();
-		if(knopStatus == 0){
 		knopStatus = encoderKnopLezen();
-		}
-
 		if(servoKnop == 0){
 		servoKnop = servoKnopLezen();
+		}
+		if (noodknoplamp == 1){
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+			HAL_UART_Transmit(&huart2, (uint8_t*) "lamp moet aan zijn", strlen("lamp moet aan zijn"), 1000);
 		}
 //		snprintf(tekstbuffer, sizeof(tekstbuffer), "Knop: %d, Positie: %ld ServoKnop: %d\r\n", knopStatus, rawCounter, servoKnop);
 //		HAL_UART_Transmit(&huart2, (uint8_t*) tekstbuffer, strlen(tekstbuffer), 1000);
@@ -344,11 +358,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(Knop_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : servoKnop_Pin */
-  GPIO_InitStruct.Pin = servoKnop_Pin;
+  /*Configure GPIO pins : servoKnop_Pin reset_noodknop_Pin */
+  GPIO_InitStruct.Pin = servoKnop_Pin|reset_noodknop_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(servoKnop_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -381,6 +395,7 @@ if(RX_Buffer [0]== 1){
   	        }
 
 }
+
 else if(RX_Buffer [0]== 2){
 
   	        uint8_t commando = RX_Buffer[0];
@@ -390,9 +405,10 @@ else if(RX_Buffer [0]== 2){
   	        {
   	            // stuur de gevraagde byte terug
   	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &knopStatus, 1);
-//  	          HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
+  	        HAL_UART_Transmit(&huart2, (uint8_t*) Verstuurd, strlen(Verstuurd), 1000);
 
   	        }
+  	      knopStatus =0;
 
 }
 else if(RX_Buffer [0]== 3){
@@ -410,8 +426,27 @@ else if(RX_Buffer [0]== 3){
 }
 else if(RX_Buffer [0]== 4){
 	servoKnop = 0;
-	knopStatus =0;
+	//knopStatus =0;
 	HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
+}
+
+else if(RX_Buffer [0]== 5){
+
+//  	        uint8_t commando = RX_Buffer[0];
+//
+//  	        // Check welk byte de master wil (1..4)
+//  	        if (commando >= 1 && commando <= 4)
+//  	        {
+//  	            // stuur de gevraagde byte terug
+  	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &reset_noodknop_status, 1);
+////  	        HAL_UART_Transmit(&huart2, (uint8_t*) Verstuurd, strlen(Verstuurd), 1000);
+//
+//  	        }
+//  	      reset_noodknop_status =0;
+
+}
+else if(RX_Buffer [0]== 6){
+	noodknoplamp = 1;
 }
     HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
 
