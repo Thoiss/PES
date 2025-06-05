@@ -53,6 +53,14 @@ void dataOntvangenVersturen(WiFiClient clients[]) {
         setRGB1Color(waarde, waarde, waarde);
         delay(1500);
       }
+      if (data == "2") {
+        waarde = waarde / 3;
+        setRGB1Color(waarde, waarde, waarde);
+        delay(1500);
+        Serial.println("Verlichting uit");
+        setRGB2Color(waarde / 6, waarde / 6, waarde / 6);
+        delay(1500);
+      }
       //RGBWAARDE
       else if (data.indexOf("RGBWAARDE") != -1) {
         int firstDash = data.indexOf(" - ");
