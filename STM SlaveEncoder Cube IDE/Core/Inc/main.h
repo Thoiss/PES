@@ -59,6 +59,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define Knop_Pin GPIO_PIN_4
 #define Knop_GPIO_Port GPIOA
+#define noodknoplamp_Pin GPIO_PIN_1
+#define noodknoplamp_GPIO_Port GPIOB
 #define servoKnop_Pin GPIO_PIN_8
 #define servoKnop_GPIO_Port GPIOA
 #define reset_noodknop_Pin GPIO_PIN_11

@@ -7,5 +7,6 @@
 ../Core/Src/main.c:473:13:MX_DMA_Init	1
 ../Core/Src/main.c:491:13:MX_GPIO_Init	1
 ../Core/Src/main.c:537:6:HAL_I2C_SlaveRxCpltCallback	8
-../Core/Src/main.c:575:6:HAL_GPIO_EXTI_Callback	3
-../Core/Src/main.c:592:6:Error_Handler	1
+../Core/Src/main.c:575:6:HAL_I2C_SlaveTxCpltCallback	2
+../Core/Src/main.c:582:6:HAL_GPIO_EXTI_Callback	3
+../Core/Src/main.c:598:6:Error_Handler	1
