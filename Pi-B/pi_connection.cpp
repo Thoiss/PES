@@ -159,12 +159,13 @@ int PiConnection::routeVerlichting(int socket[])
         printf("Geen routeVerlichting bericht binnen\n");
         return -1;
     }
-    // statusRouteVerlichting wordt een toggle op 1
     int statusRouteVerlichting = atoi(buffer);
     printf("statusRouteVerlichting PiA:%d\n", statusRouteVerlichting);
-    if (statusRouteVerlichting == 1)
+    if (statusRouteVerlichting == 1 && statusRouteVerlichting == 2)
     {
         Versturen = true;
+        //statusRouteVerlichting = !statusRouteVerlichting;
+        //printf("routeVerlichting: %d\n", statusRouteVerlichting);  
     }
     if (Versturen){
         routeAanstuurder.routeWemos(socket[1], 1,statusRouteVerlichting, Versturen ); // Aansturen van Wemos 1
@@ -227,3 +228,46 @@ int PiConnection::ontvangTemperatuurData(char* outputBuffer, size_t bufSize)
 
     return 0;
 }
+
+int PiConnection::ontvangPersoonData(char* outputBuffer, size_t bufSize)
+{
+    if (pi_a_socket <= 0) {
+        printf("Socket niet verbonden.\n");
+        return -1;
+    }
+
+    const char *request = "persoon";
+    memset(buffer, 0, sizeof(buffer));
+
+    if (send(pi_a_socket, request, strlen(request), 0) < 0) {
+        perror("Send mislukt");
+        return -1;
+    }
+
+    int valread = 0;
+    int retry = 0;
+    while (retry <= 15) {
+        valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+        if (valread > 0) break;
+
+        usleep(250000); // 250 ms wachten
+        retry++;
+    }
+
+    if (valread <= 0) {
+        perror("Fout bij lezen van server (na retries)");
+        return -1;
+    }
+
+    buffer[valread] = '\0';
+    printf("Persoonsgegevens ontvangen van server: %s\n", buffer);
+
+    int personen = 0;
+
+    personen = atoi(buffer);
+
+
+    snprintf(outputBuffer, bufSize, "%d", personen);
+    return 0;
+}
+
