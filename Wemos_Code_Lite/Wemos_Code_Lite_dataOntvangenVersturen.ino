@@ -46,6 +46,7 @@ void dataOntvangenVersturen(WiFiClient clients[]) {
         clients[i] = WiFiClient();
       }
       if (data == "1") {
+        delay(5000);
         Serial.println("Verlichting uit");
         setRGB2Color(waarde / 6, waarde / 6, waarde / 6);
         delay(1500);
@@ -54,6 +55,7 @@ void dataOntvangenVersturen(WiFiClient clients[]) {
         delay(1500);
       }
       if (data == "2") {
+        delay(5000);
         waarde = waarde / 3;
         setRGB1Color(waarde, waarde, waarde);
         delay(1500);
