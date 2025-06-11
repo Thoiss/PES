@@ -75,6 +75,10 @@ static void MX_TIM2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 volatile bool ledAan = false;
+volatile bool statussend = true;
+
+volatile bool ledAan2 = false;
+volatile bool statussend2 = true;
 /* USER CODE END 0 */
 
 /**
@@ -118,25 +122,29 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);     // Start timer
   HAL_NVIC_SetPriority(TIM2_IRQn, 5, 0); // Stel een lagere prioriteit in voor de timer interrupt
  // HAL_I2C_Slave_Transmit_IT(&hi2c1 ,(uint8_t *)RX_Buffer, 1); //Receiving in Interrupt mode
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
   while (1)
   {
-          pasID = scanPas();
+      pasID = scanPas();
+     // char debugMsg5[] = "while loop \r\n";
+ //     HAL_UART_Transmit(&huart2, (uint8_t*)debugMsg5, strlen(debugMsg5), HAL_MAX_DELAY);
 
-          if (pasID > 0) {
-        	  	 pasIDbuf = pasID;
-        	  	 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4 | LED1_Pin, GPIO_PIN_SET);
-        	  	 ledAan = true;
+      if (pasID > 0 && statussend == true) {
+    	  	 pasIDbuf = pasID;
+    	  	 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4 | LED1_Pin, GPIO_PIN_SET);
+    	  	 ledAan = true;
+    	  	 statussend = false;
+    	  	__HAL_TIM_SET_COUNTER(&htim2, 0);  // Reset timer
+    	  	HAL_TIM_Base_Start_IT(&htim2);     // Start timer
+    	//  	char debugMsg4[] = "Timer wordt gestart\r\n";
+    	//  	HAL_UART_Transmit(&huart2, (uint8_t*)debugMsg4, strlen(debugMsg4), HAL_MAX_DELAY);
+      }
+    /* USER CODE END WHILE */
 
-        	  	__HAL_TIM_SET_COUNTER(&htim2, 0);  // Reset timer
-        	  	HAL_TIM_Base_Start_IT(&htim2);     // Start timer
-          }
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -405,7 +413,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|LED1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|LD3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|errorlamp_Pin|LD3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PA4 LED1_Pin */
   GPIO_InitStruct.Pin = GPIO_PIN_4|LED1_Pin;
@@ -414,8 +422,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0 LD3_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|LD3_Pin;
+  /*Configure GPIO pins : PB0 errorlamp_Pin LD3_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|errorlamp_Pin|LD3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -431,6 +439,7 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
     if (hi2c->Instance == I2C1)  // check of het de juiste I2C is
     {
+    	if(RX_Buffer [0]== 1){
        uint8_t data[4];
        data[0] = (uint8_t)(pasIDbuf & 0xFF);
        data[1] = (uint8_t)((pasIDbuf >> 8) & 0xFF);
@@ -439,6 +448,8 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 
        // Stuur de 4 bytes via I2C
        HAL_I2C_Slave_Transmit(&hi2c1, data, 4, 1000);
+//       char debugMsg3[] = "Opvraag voor interupt 1\r\n";
+//       HAL_UART_Transmit(&huart2, (uint8_t*)debugMsg3, strlen(debugMsg3), HAL_MAX_DELAY);
 
     //   HAL_I2C_Slave_Transmit(&hi2c1, buffer, 3, 1000);
        HAL_UART_Transmit(&huart2, data, 4, 1000);
@@ -446,8 +457,15 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 
 
         // Start opnieuw met ontvangen voor de volgende byte
-
-       HAL_I2C_Slave_Receive_IT(hi2c, RX_Buffer, 1);
+    	}
+    	if(RX_Buffer [0]== 2){
+    		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|errorlamp_Pin|LD3_Pin, GPIO_PIN_SET);
+    		ledAan2 = true;
+//    		pasIDbuf = 0;
+//    		char debugMsg2[] = "Opvraag voor interupt 2\r\n";
+//    		HAL_UART_Transmit(&huart2, (uint8_t*)debugMsg2, strlen(debugMsg2), HAL_MAX_DELAY);
+    	}
+       HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
     }
 }
 
@@ -467,10 +485,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         if (ledAan)
         {
+            if (ledAan2) {
+            	HAL_GPIO_WritePin(GPIOB, errorlamp_Pin, GPIO_PIN_RESET);
+            	char debugMsg[] = "Led2 is aangeroepen\r\n";
+            	HAL_UART_Transmit(&huart2, (uint8_t*)debugMsg, strlen(debugMsg), 1000);
+           }
             HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4 | LED1_Pin, GPIO_PIN_RESET);
             ledAan = false;
+        	ledAan2 = false;
+        	statussend = true;
             HAL_TIM_Base_Stop_IT(&htim2);  // Stop de timer na 1x
         }
+//        else if (ledAan2) // Ook hier de error LED resetten na timeout
+//                {
+//                    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|errorlamp_Pin|LD3_Pin, GPIO_PIN_RESET);
+//                    ledAan2 = false;
+//                    HAL_TIM_Base_Stop_IT(&htim2);
+//                }
+
     }
 }
 /* USER CODE END 4 */
