@@ -54,7 +54,7 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 int status = 10;
 int isopen = 0;
-int noodknop = 0;
+uint8_t noodknop = 0;
 uint32_t DICHT = 500;
 uint32_t OPEN = 2500;
 uint8_t RX_Buffer[1];
@@ -572,6 +572,13 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
 
 }
 
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+    if (hi2c->Instance == I2C1) {
+        HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
+    }
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if(GPIO_Pin == GPIO_PIN_3 && noodknop == 0) {
@@ -580,7 +587,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  status = 0;
 	  char msg2[] = "Ontvangen: 0\r\n";
 	  HAL_UART_Transmit(&huart2, (uint8_t*)msg2, strlen(msg2), HAL_MAX_DELAY);
-	  HAL_I2C_Slave_Transmit_IT(&hi2c1, &noodknop, 1);
   }
 }
 /* USER CODE END 4 */
