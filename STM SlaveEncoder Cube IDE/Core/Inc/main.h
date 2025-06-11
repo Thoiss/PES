@@ -65,6 +65,8 @@ void Error_Handler(void);
 #define servoKnop_GPIO_Port GPIOA
 #define reset_noodknop_Pin GPIO_PIN_11
 #define reset_noodknop_GPIO_Port GPIOA
+#define openDeurLamp_Pin GPIO_PIN_5
+#define openDeurLamp_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
