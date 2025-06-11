@@ -10,6 +10,8 @@
 #include "SHT3XSensor.h"
 #include "I2CDevice.h"
 
+bool airco_status_ = false;
+
 TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave& s2, Slave& s3, Slave& s4)
     : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2), s3(s3), s4(s4),
       tempInside_(0.0f), tempOutside_(0.0f), humInside_(0.0f), humOutside_(0.0f) {}
@@ -50,6 +52,7 @@ void TCPServer::setupSocket() {
 void TCPServer::run() {
     setupSocket();
 
+
     SHT3XSensor insideSensor(0x44);
     SHT3XSensor outsideSensor(0x45);
     bool deurAlOpen = false;
@@ -58,32 +61,34 @@ void TCPServer::run() {
         std::cerr << "Kon sensoren niet openen\n";
         return;
     }
+ //   if(!airco_status_){
+        while (true) {
+            airco();
+            bool insideRead = insideSensor.readTemperatureAndHumidity(tempInside_, humInside_);
+            bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside_, humOutside_);
 
-    while (true) {
-        bool insideRead = insideSensor.readTemperatureAndHumidity(tempInside_, humInside_);
-        bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside_, humOutside_);
+            if (insideRead && outsideRead) {
+                std::cout << "Binnen: " << tempInside_ << " °C, Buiten: " << tempOutside_ << " °C\n";
 
-        if (insideRead && outsideRead) {
-            std::cout << "Binnen: " << tempInside_ << " °C, Buiten: " << tempOutside_ << " °C\n";
-
-            if (tempInside_ > 27.0f && tempOutside_ < tempInside_ && !deurAlOpen) {//dit was 26 f
-                schrijfNaarDeurTempAan();
-                deurAlOpen = true;
-                std::cout << "Deur open vanwege temperatuur\n";
-            }
-            else if (tempInside_ < 26.0f && deurAlOpen) {//dit was 25 f
-                schrijfNaarDeurUit_Temp();
-                deurAlOpen = false;
-                std::cout << "Deur dicht vanwege temperatuur\n";
-            }
-        }
+                if (tempInside_ > 27.0f && tempOutside_ < tempInside_ && !deurAlOpen) {//dit was 26 f
+                    schrijfNaarDeurTempAan();
+                    deurAlOpen = true;
+                    std::cout << "Deur open vanwege temperatuur\n";
+                }
+                else if (tempInside_ < 26.0f && deurAlOpen) {//dit was 25 f
+                    schrijfNaarDeurUit_Temp();
+                    deurAlOpen = false;
+                    std::cout << "Deur dicht vanwege temperatuur\n";
+                }
+    //    }
+    }
 
         verwerkKaart();
         waardeVerlichting();
         standVerlichting();
         standservo();
         opvragen_reset_noodknop_status();
-        // lampaansturen();
+        lampaansturen();
 
         fd_set readfds;
         FD_ZERO(&readfds);
@@ -250,7 +255,11 @@ void TCPServer::verwerkKaart() {
                 schrijfNaarDeur_RFID();
                 db.schrijvenrfid(data, persoon);
                 routeVerlichting = db.checkLichtStatus(data);
+                std::cout << "Routeverlichting en db" << std::endl;
             }
+               else {
+        s1.schrijfCommando(2);
+    }
         }
     }
 }
@@ -282,4 +291,14 @@ void TCPServer::lampaansturen(){
     if (noodknop_status == 1){
         s3.schrijfCommando(6);
     }
+    std::cout << "status noodknop:  " << noodknop_status << std::endl;
 }
+
+void TCPServer::airco() {
+    airco_status_ = 0;
+    s4.schrijfCommando(6);
+    airco_status_ = s4.leesTerminal();
+    std::cout << "status airco:  " << airco_status_ << std::endl;
+}
+
+
