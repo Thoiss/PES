@@ -3,7 +3,6 @@
 
 #include "wemos_connection.hpp"
 #include "pi_connection.hpp"
-#include "status_handler.hpp"
 #include "wemos_aansturen.hpp"
 #define PI_A_PORT 8080 // Pi-A port
 #define Devices 3      // Aantal Wemos apparaten
@@ -16,6 +15,7 @@ public:
 private:
     const char *pi_a_ip = "192.168.137.46"; // Raspberry Pi A
     int Socket[Devices] = {0};
+    int Error = 0;
     int piSocket = -1;
     const char *wemos_ips[Devices] = {
         "192.168.137.20", // Wemos 1 (Pro - inputs)

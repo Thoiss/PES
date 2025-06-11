@@ -12,7 +12,15 @@ int WemosAansturen::stuurWemosAan(int socket, int deviceIndex, int statusVerlich
         if (deviceIndex == 1){
             printf("Socket correct\n");
             snprintf(RGBSend, sizeof(RGBSend),"%d - %d - RGBWAARDE\n",statusVerlichting, verlichtingsWaarde);
-            send(socket, RGBSend, strlen(RGBSend), 0);
+            printf("Verlichting %s\n", RGBSend);
+            if(send(socket, RGBSend, strlen(RGBSend), 0) <= 0) 
+            {
+                perror("Fout bij versturen naar Wemos. Socket wordt geclosed.");
+                //close(socket);
+                return -1;
+                
+            }
+            
             Versturen = false;
         }
 
@@ -30,7 +38,13 @@ int WemosAansturen::routeWemos(int socket, int deviceIndex, int statusRouteVerli
             printf("Socket correct\n");
             snprintf(routeSend, sizeof(routeSend),"%d\n",statusRouteVerlichting);
             printf("%s\n", routeSend);
-            send(socket, routeSend, strlen(routeSend), 0);
+            if(send(socket, routeSend, strlen(routeSend), 0) <= 0) 
+            {
+                perror("Fout bij versturen naar Wemos. Socket wordt geclosed.");
+                //close(socket);
+                return -1;
+                
+            }
             Versturen = false;
         }
 

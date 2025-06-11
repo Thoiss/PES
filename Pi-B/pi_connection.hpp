@@ -20,6 +20,7 @@ public:
     int encoderVerlichting(int socket[]);
     int routeVerlichting(int socket[]);
     int ontvangTemperatuurData(char* outputBuffer, size_t bufSize);
+    int ontvangPersoonData(char* outputBuffer, size_t bufSize);
 private:
     int pi_a_socket = 0;  
     int statusServo = 0;

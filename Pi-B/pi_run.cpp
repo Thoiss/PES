@@ -3,17 +3,20 @@
 #include <cstring>
 #include <unistd.h>   // for close(), sleep()
 #include <ctime>      // for time(), difftime()
+#include <signal.h>
 
 int piRun::Loop() {
     WemosAansturen aanstuurder;
-
+    signal(SIGPIPE, SIG_IGN);
     char message[256] = {0};                // Bericht om te versturen
     char lastMessage[Devices][256] = {{0}}; // Vorig bericht per Wemos
     WemosConnection wemosConns[Devices];    // Wemos verbindingen
     PiConnection piConn;
 
     char tempBuffer[128] = {0};             // Buffer voor temperatuurdata
+    char persBuffer[32] = {0};              // Buffer voor persoonsdata
     time_t lastTempUpdate = 0;              // Tijdstip van laatste temp update
+    time_t lastPersUpdate = 0;              // Tijdstip van laatste persoons update
 
     printf("Verbind met Pi-A...\n");
 
@@ -23,18 +26,49 @@ int piRun::Loop() {
             piSocket = piConn.connectToPi(pi_a_ip, PI_A_PORT);
             printf("Resultaat verbinding Pi-A: %d\n", piSocket);
         } else if (piSocket > 0) {
-            piConn.encoderVerlichting(Socket);
-            piConn.routeVerlichting(Socket);
+            Error = piConn.encoderVerlichting(Socket);
+            if(Error== -1){
+                printf("Fout bij Pi Socket lezen, sluit socket.\n");
+                close(piSocket);
+                piSocket = -1;
+            }
+            else if (Error== -2){
+                printf("Fout bij Wemos Socket sturen, sluit socket.\n");
+                close(Socket[1]);
+                Socket[1] = 0;
+            }
+            Error = piConn.routeVerlichting(Socket);
+            if(Error== -1){
+                printf("Fout bij Wemos Socket sturen, sluit socket.\n");
+                close(piSocket);
+                piSocket = -1;
+            }
+            else if (Error== -2){
+                printf("Fout bij Wemos Socket sturen, sluit socket.\n");
+                close(Socket[1]);
+                Socket[1] = 0;
+            }
         }
 
-        // Elke 18 seconden temperatuurdata ophalen
+        // Elke 23 seconden temperatuurdata ophalen
         time_t now = time(NULL);
-        if (difftime(now, lastTempUpdate) >= 18) {
+        if (difftime(now, lastTempUpdate) >= 23) {
             if (piConn.ontvangTemperatuurData(tempBuffer, sizeof(tempBuffer)) != 0) {
                 strcpy(tempBuffer, "Geen temperatuurdata");
+                close(piSocket);
+                piSocket = -1;
             }
-            printf("Ontvangen temperatuurdata: %s\n", tempBuffer);
             lastTempUpdate = now;
+        }
+
+        // Elke 23 seconden persoonsdata ophalen
+        if (difftime(now, lastPersUpdate) >= 23) {
+            if (piConn.ontvangPersoonData(persBuffer, sizeof(persBuffer)) != 0) {
+                strcpy(persBuffer, "?");
+                close(piSocket);
+                piSocket = -1;
+            }
+            lastPersUpdate = now;
         }
 
         // Loop over Wemos apparaten
@@ -52,9 +86,11 @@ int piRun::Loop() {
             }
 
             if (Socket[i] > 0) {
-                // Bericht samenstellen, specifiek voor lichtkrant (Wemos[2])
+                // Bericht samenstellen
                 if (i == 2) {
-                    snprintf(message, sizeof(message), "text:Temp binnen/buiten: %s\n", tempBuffer);
+                    snprintf(message, sizeof(message),
+                        "text:Temp binnen/buiten: %s, Personen: %s\n",
+                        tempBuffer, persBuffer);
                 } else {
                     snprintf(message, sizeof(message), "text:Status update\n");
                 }
@@ -79,15 +115,14 @@ int piRun::Loop() {
         for (int j = 0; j < Devices; ++j) {
             if (Socket[j] > 0) {
                 printf("Huidige Socket[%d] = %d\n", j, Socket[j]);
-                // Hier eventueel extra aansturing
-                // aanstuurder.stuurWemosAan(Socket[j], j);
             } else {
                 printf("Socket[%d] invalid\n", j);
             }
         }
-
-        // Voorkom 100% CPU load
-        //sleep(1); // 1 seconde pauze, kan je aanpassen
+        if(piSocket == -1){
+            usleep(500000); // 500 ms wachten
+        }
+        //sleep(1); // Eventueel aanzetten voor CPU rust
     }
 
     return 0;

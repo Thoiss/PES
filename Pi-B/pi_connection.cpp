@@ -76,7 +76,7 @@ int PiConnection::encoderVerlichting(int socket[])
     while (retry <= 15 && valread <= 0)
     {
         memset(buffer, 0, sizeof(buffer));
-        usleep(250000); // 250 ms
+        usleep(25000); // 25 ms
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
         buffer[valread] = '\0';
         printf("Encoder verlichting ontvangen PiA:%s\n", buffer);
@@ -124,7 +124,10 @@ int PiConnection::encoderVerlichting(int socket[])
 
     if (Versturen)
     {
-        aanstuurder.stuurWemosAan(socket[1], 1, statusVerlichting, verlichtingsWaarde, Versturen);
+        if(aanstuurder.stuurWemosAan(socket[1], 1, statusVerlichting, verlichtingsWaarde, Versturen) == -1){
+            Versturen = false;
+            return -2;
+        }
     }
 
     memset(buffer, 0, sizeof(buffer));
@@ -148,7 +151,7 @@ int PiConnection::routeVerlichting(int socket[])
     printf("Route verlichting ontvangen PiA:%s\n", buffer);
     while (retry <= 15 && valread <= 0)
     {
-        usleep(250000); // 250 ms
+        usleep(25000); // 25 ms
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
         buffer[valread] = '\0';
         printf("Ontvangen PiA: %s\n", buffer);
@@ -168,7 +171,11 @@ int PiConnection::routeVerlichting(int socket[])
         //printf("routeVerlichting: %d\n", statusRouteVerlichting);  
     }
     if (Versturen){
-        routeAanstuurder.routeWemos(socket[1], 1,statusRouteVerlichting, Versturen ); // Aansturen van Wemos 1
+        if(routeAanstuurder.routeWemos(socket[1], 1,statusRouteVerlichting, Versturen ) == -1){
+        Versturen = false;
+        return -2;
+        } // Aansturen van Wemos 1
+        
     }   
     memset(buffer, 0, sizeof(buffer));
     return 0;
@@ -198,7 +205,7 @@ int PiConnection::ontvangTemperatuurData(char* outputBuffer, size_t bufSize)
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
         if (valread > 0) break;
 
-        usleep(250000); // 250 ms wachten
+        usleep(25000); // 25 ms wachten
         retry++;
     }
 
@@ -250,7 +257,7 @@ int PiConnection::ontvangPersoonData(char* outputBuffer, size_t bufSize)
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
         if (valread > 0) break;
 
-        usleep(250000); // 250 ms wachten
+        usleep(25000); // 25 ms wachten
         retry++;
     }
 
