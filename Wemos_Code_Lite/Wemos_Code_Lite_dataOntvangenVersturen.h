@@ -4,7 +4,7 @@
 #define MAX_CLIENTS 5
 #define RED_PIN_1   D6 // Diffused RGB-led
 #define GREEN_PIN_1 D7 // Diffused RGB-led
-#define BLUE_PIN_1  D8 // Diffused RGB-led
+#define BLUE_PIN_1  D5 // Diffused RGB-led
 
 #define RED_PIN_2   D2 // Non-Diffused RGB-led
 #define GREEN_PIN_2 D3 // Non-Diffused RGB-led

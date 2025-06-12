@@ -13,7 +13,6 @@ void setRGB2Color(int red, int green, int blue) {
   analogWrite(BLUE_PIN_2, blue);
 }
 
-
 void RGB1Aanzetten(){
   pinMode(RED_PIN_1, OUTPUT);
   pinMode(GREEN_PIN_1, OUTPUT);
@@ -36,32 +35,39 @@ void dataOntvangenVersturen(WiFiClient clients[]) {
       Serial.print(": ");
       Serial.println(data);
 
-      // Disconnect
-      if (data == "End") {
-        clients[i].print("Verbinding wordt afgesloten door server");
-        Serial.print("Client ");
-        Serial.print(i);
-        Serial.println(" is losgekoppeld.");
-        clients[i].stop();
-        clients[i] = WiFiClient();
-      }
       if (data == "1") {
         delay(5000);
-        Serial.println("Verlichting uit");
-        setRGB2Color(waarde / 6, waarde / 6, waarde / 6);
-        delay(1500);
-        waarde = waarde / 3;
-        setRGB1Color(waarde, waarde, waarde);
-        delay(1500);
+        waarde = waarde / 100;
+        if (waarde *90 < 5) {
+            setRGB2Color(10, 100, 10);
+            delay(1500);
+            setRGB1Color(10, 100, 10);
+            delay(1500);
+        } else {
+            setRGB2Color(waarde * 10, waarde * 90, waarde * 10);
+            delay(1500);
+            setRGB1Color(waarde * 10, waarde * 90, waarde * 10);
+            delay(1500);
+        }
       }
+ 
       if (data == "2") {
         delay(5000);
-        waarde = waarde / 3;
-        setRGB1Color(waarde, waarde, waarde);
-        delay(1500);
-        Serial.println("Verlichting uit");
-        setRGB2Color(waarde / 6, waarde / 6, waarde / 6);
-        delay(1500);
+        Serial.println("Verlichting dimmen");
+        waarde = waarde / 100;
+        Serial.println(waarde);
+        if (waarde *90 < 5) {
+
+            setRGB2Color(100, 10, 10);
+            delay(1500);
+            setRGB1Color(100, 10, 10);
+            delay(1500);
+        } else {
+            setRGB2Color(waarde * 90, waarde * 10, waarde * 10);
+            delay(1500);
+            setRGB1Color(waarde * 90, waarde * 10, waarde * 10);
+            delay(1500);
+        }
       }
       //RGBWAARDE
       else if (data.indexOf("RGBWAARDE") != -1) {
