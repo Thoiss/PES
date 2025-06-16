@@ -32,6 +32,7 @@ int WemosConnection::connectToWemos(const char* ip) {
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         printf("Verbinding mislukt met: %s\n", ip);
+        close(sock);
         return -1;
     }
 
