@@ -139,8 +139,11 @@ int main(void)
 //	  }
 
 
+
+	  //dit gebeurt wanneer rfid klopt of wanneer button bij STM(encoder wordt ingedrukt)
+	  //luchtsluis gaat open en dicht
 		if (status == 1 && noodknop == 0) {
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, OPEN); //rfid sluis open en dicht
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, OPEN);
 			HAL_Delay(3000);
 			HAL_UART_Transmit(&huart2, (uint8_t*)test2, strlen(test2), HAL_MAX_DELAY);
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, DICHT);
@@ -154,12 +157,16 @@ int main(void)
 			status = 10; //aangepast met lennard
 		}
 
+		//noodknop ingedrukt. luchtsluis in noodstand(buitendeur open en binnendeur dicht)
 		else if (status == 0) {
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, OPEN); // buitendeur moet open zijn zodat mensen naar buiten kunnen lopen
 			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, DICHT); //binnendeur moet dich wanneer noodknop wordt ingedrukt zodat mensen niet naar binnen kunnen
 			noodknop = 1;
 		}
 
+
+		//gebeurt als temp boven 27 graden komt
+		//luchtsluis deuren gaan tegelijk open
 		else if (status == 2 && noodknop == 0) {
 			HAL_UART_Transmit(&huart2, (uint8_t*)test, strlen(test), HAL_MAX_DELAY);
 			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, OPEN); // temperatuur sluis
@@ -168,6 +175,9 @@ int main(void)
 			isopen = 1;
 		}
 
+
+		//gebeurt als temp onder 26 graden komt
+		//beide deuren gaan tegelijk dicht
 		else if (status == 3 && noodknop == 0) {
 			__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, DICHT); //temperatuur sluis
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, DICHT); // rfid sluis
@@ -175,10 +185,16 @@ int main(void)
 			isopen = 0;
 		}
 
+
+		//wanneer code wordt gestard lijkt mij logisch dat beide servos dicht zijn
+		//beide deuren gaan dicht
 		else if (status == 10 && noodknop == 0) {
-					__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, DICHT); //wanneer code wordt gestard lijkt mij logisch dat beide servos dicht zijn
+					__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, DICHT);
 					__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, DICHT);
 		}
+
+		//als resetknop wordt ingedrukt kom je hierin terecht
+		//beide deuren gaan dicht en gaat weer normaal functioneren
 		else if (status == 4&& noodknop ==1){
 			noodknop = 0;
 			status = 10;
@@ -536,6 +552,8 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
 
+
+	//wanneer de pi een request stuurt komt het hier terecht
 	if (hi2c->Instance == I2C1) {
 		if (RX_Buffer[0] == 1) {
 			char msg1[] = "Ontvangen: 1\r\n";
