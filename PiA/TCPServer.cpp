@@ -63,7 +63,7 @@ void TCPServer::run() {
     }
  //   if(!airco_status_){
         while (true) {
-            airco();
+           // airco();
             bool insideRead = insideSensor.readTemperatureAndHumidity(tempInside_, humInside_);
             bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside_, humOutside_);
 
@@ -300,5 +300,3 @@ void TCPServer::airco() {
     airco_status_ = s4.leesTerminal();
     std::cout << "status airco:  " << airco_status_ << std::endl;
 }
-
-

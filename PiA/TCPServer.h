@@ -46,6 +46,7 @@ private:
     void opvragen_reset_noodknop_status();
     void lampaansturen();
     float tempInside_, tempOutside_, humInside_, humOutside_;
+    void airco();
 };
 
 #endif
