@@ -125,9 +125,10 @@ int PiConnection::encoderVerlichting(int socket[])
     if (Versturen)
     {
         if(aanstuurder.stuurWemosAan(socket[1], 1, statusVerlichting, verlichtingsWaarde, Versturen) == -1){
-            Versturen = false;
             return -2;
         }
+        Versturen = false;
+
     }
 
     memset(buffer, 0, sizeof(buffer));
@@ -157,18 +158,16 @@ int PiConnection::routeVerlichting(int socket[])
         printf("Ontvangen PiA: %s\n", buffer);
         retry++;
     }
-    if (valread <= 0 || buffer == "niet correct ontvangen")
+    if (valread <= 0 || strcmp(buffer, "niet correct ontvangen") == 0)
     {
         printf("Geen routeVerlichting bericht binnen\n");
         return -1;
     }
     int statusRouteVerlichting = atoi(buffer);
     printf("statusRouteVerlichting PiA:%d\n", statusRouteVerlichting);
-    if (statusRouteVerlichting == 1 && statusRouteVerlichting == 2)
+    if (statusRouteVerlichting == 1 || statusRouteVerlichting == 2)
     {
         Versturen = true;
-        //statusRouteVerlichting = !statusRouteVerlichting;
-        //printf("routeVerlichting: %d\n", statusRouteVerlichting);  
     }
     if (Versturen){
         if(routeAanstuurder.routeWemos(socket[1], 1,statusRouteVerlichting, Versturen ) == -1){

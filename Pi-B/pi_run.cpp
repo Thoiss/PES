@@ -6,15 +6,15 @@
 #include <signal.h>
 
 int piRun::Loop() {
+    char persBuffer[64] = {0};              // Buffer voor persoonsdata
     WemosAansturen aanstuurder;
     signal(SIGPIPE, SIG_IGN);
-    char message[256] = {0};                // Bericht om te versturen
-    char lastMessage[Devices][256] = {{0}}; // Vorig bericht per Wemos
+    char message[512] = {0};                // Bericht om te versturen
+    char lastMessage[Devices][512] = {{0}}; // Vorig bericht per Wemos
     WemosConnection wemosConns[Devices];    // Wemos verbindingen
     PiConnection piConn;
 
     char tempBuffer[128] = {0};             // Buffer voor temperatuurdata
-    char persBuffer[32] = {0};              // Buffer voor persoonsdata
     time_t lastTempUpdate = 0;              // Tijdstip van laatste temp update
     time_t lastPersUpdate = 0;              // Tijdstip van laatste persoons update
 
@@ -52,7 +52,7 @@ int piRun::Loop() {
 
         // Elke 23 seconden temperatuurdata ophalen
         time_t now = time(NULL);
-        if (difftime(now, lastTempUpdate) >= 23) {
+        if (difftime(now, lastTempUpdate) >= 22) {
             if (piConn.ontvangTemperatuurData(tempBuffer, sizeof(tempBuffer)) != 0) {
                 strcpy(tempBuffer, "Geen temperatuurdata");
                 close(piSocket);
@@ -62,7 +62,7 @@ int piRun::Loop() {
         }
 
         // Elke 23 seconden persoonsdata ophalen
-        if (difftime(now, lastPersUpdate) >= 23) {
+        if (difftime(now, lastPersUpdate) >= 22) {
             if (piConn.ontvangPersoonData(persBuffer, sizeof(persBuffer)) != 0) {
                 strcpy(persBuffer, "?");
                 close(piSocket);
