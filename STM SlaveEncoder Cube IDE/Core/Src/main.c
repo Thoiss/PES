@@ -55,11 +55,12 @@ char Verstuurd[] = "Verstuurd\n";
 char noodknop[] = "knop is ingedrukt\n\r";
 char geen_noodknop[] = "nee\n\r";
 uint32_t rawCounter = 0;
-uint32_t delay = 200;
 uint8_t knopStatus = 0; // Variabele om de knopstatus op te slaan
 uint8_t servoKnop = 0;
 uint8_t reset_noodknop_status = 0;
 uint8_t noodknoplamp = 0;
+uint8_t deurOpenLampAan = 0;
+uint32_t deurOpenLampTijd = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -129,7 +130,17 @@ int main(void)
 		rawCounter = counterLezen();
 		knopStatus = encoderKnopLezen();
 		if(servoKnop == 0){
-		servoKnop = servoKnopLezen();
+			servoKnop = servoKnopLezen();
+		}
+		if (servoKnop == 1 && deurOpenLampAan == 0) {
+		    HAL_GPIO_WritePin(openDeurLamp_GPIO_Port, openDeurLamp_Pin, GPIO_PIN_SET);
+		    deurOpenLampTijd = HAL_GetTick();
+		    deurOpenLampAan = 1;
+		}
+		if (deurOpenLampAan && (HAL_GetTick() - deurOpenLampTijd >= 7000)) {
+		    HAL_GPIO_WritePin(openDeurLamp_GPIO_Port, openDeurLamp_Pin, GPIO_PIN_RESET);
+		    deurOpenLampAan = 0;
+		    servoKnop = 0;
 		}
 		if (noodknoplamp == 1){
 			HAL_GPIO_WritePin(noodknoplamp_GPIO_Port, noodknoplamp_Pin, GPIO_PIN_SET);
@@ -354,7 +365,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(noodknoplamp_GPIO_Port, noodknoplamp_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, noodknoplamp_Pin|openDeurLamp_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : Knop_Pin */
   GPIO_InitStruct.Pin = Knop_Pin;
@@ -362,12 +373,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(Knop_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : noodknoplamp_Pin */
-  GPIO_InitStruct.Pin = noodknoplamp_Pin;
+  /*Configure GPIO pins : noodknoplamp_Pin openDeurLamp_Pin */
+  GPIO_InitStruct.Pin = noodknoplamp_Pin|openDeurLamp_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(noodknoplamp_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : servoKnop_Pin reset_noodknop_Pin */
   GPIO_InitStruct.Pin = servoKnop_Pin|reset_noodknop_Pin;
