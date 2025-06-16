@@ -139,7 +139,7 @@ int main(void)
 //	  }
 
 
-		if (status == 1 && noodknop == 0) { //noodknop == 0 als dat weg is overal zou noodknop moeten werken
+		if (status == 1 && noodknop == 0) {
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, OPEN); //rfid sluis open en dicht
 			HAL_Delay(3000);
 			HAL_UART_Transmit(&huart2, (uint8_t*)test2, strlen(test2), HAL_MAX_DELAY);
@@ -543,11 +543,7 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
 			status = 1;
 		}
 
-		else if(RX_Buffer[0] == 0){
-			char msg2[] = "Ontvangen: 0\r\n";
-			HAL_UART_Transmit(&huart2, (uint8_t*)msg2, strlen(msg2), HAL_MAX_DELAY);
-			status = 0;
-		}
+
 		else if(RX_Buffer[0] == 2){
 			char msg3[] = "Ontvangen: 2\r\n";
 			HAL_UART_Transmit(&huart2, (uint8_t*)msg3, strlen(msg3), HAL_MAX_DELAY);

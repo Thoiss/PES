@@ -60,8 +60,8 @@ all: main-build
 main-build: STM_Slave_Servo_Aansturen.elf secondary-outputs
 
 # Tool invocations
-STM_Slave_Servo_Aansturen.elf STM_Slave_Servo_Aansturen.map: $(OBJS) $(USER_OBJS) C:\Users\visha\STM32CubeIDE\projectPES\STM_Slave_Servo_Aansturen\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "STM_Slave_Servo_Aansturen.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\visha\STM32CubeIDE\projectPES\STM_Slave_Servo_Aansturen\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM_Slave_Servo_Aansturen.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+STM_Slave_Servo_Aansturen.elf STM_Slave_Servo_Aansturen.map: $(OBJS) $(USER_OBJS) C:\Users\visha\Desktop\STM_Slave_Servo_Aansturen\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "STM_Slave_Servo_Aansturen.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\visha\Desktop\STM_Slave_Servo_Aansturen\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM_Slave_Servo_Aansturen.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
