@@ -117,11 +117,9 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-		reset_noodknop_status = !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
+		reset_noodknop_status = !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11); //als resetknop wordt ingedrukt gaat lamp uit
 			if(reset_noodknop_status == 1){
 				HAL_UART_Transmit(&huart2, (uint8_t*) noodknop, strlen(noodknop), 1000);
-				reset_noodknop_status = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin);
-				// Ledje wordt uitgezet bij indrukken reset noodknop
 				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
 				noodknoplamp = 0;
 			}
@@ -451,8 +449,7 @@ else if(RX_Buffer [0]== 5){
   	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &reset_noodknop_status, 1);
 
 }
-else if(RX_Buffer [0]== 6){
-	// zet noodknoplamp op 1. In de while wordt het ledje aangezet
+else if(RX_Buffer [0]== 6){ //als pi A request 6 stuurt ordt noodknoplamp op 1 gezet waardoor het lampje aangaat
 	noodknoplamp = 1;
 }
     HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
