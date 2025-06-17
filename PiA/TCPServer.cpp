@@ -10,7 +10,6 @@
 #include "SHT3XSensor.h"
 #include "I2CDevice.h"
 
-bool airco_status_ = false;
 
 TCPServer::TCPServer(int port, Slave& s1, Database& db, Slave& s2, Slave& s3, Slave& s4)
     : port_(port), server_fd_(-1), s1(s1), db(db), s2(s2), s3(s3), s4(s4),
@@ -61,9 +60,7 @@ void TCPServer::run() {
         std::cerr << "Kon sensoren niet openen\n";
         return;
     }
- //   if(!airco_status_){
         while (true) {
-           // airco();
             bool insideRead = insideSensor.readTemperatureAndHumidity(tempInside_, humInside_);
             bool outsideRead = outsideSensor.readTemperatureAndHumidity(tempOutside_, humOutside_);
 
@@ -294,9 +291,3 @@ void TCPServer::lampaansturen(){
     std::cout << "status noodknop:  " << noodknop_status << std::endl;
 }
 
-void TCPServer::airco() {
-    airco_status_ = 0;
-    s4.schrijfCommando(6);
-    airco_status_ = s4.leesTerminal();
-    std::cout << "status airco:  " << airco_status_ << std::endl;
-}
