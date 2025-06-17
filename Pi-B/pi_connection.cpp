@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstring>
 #include "wemos_aansturen.hpp"
+// Verbind met Pi A
 int PiConnection::connectToPi(const char *ip, int port)
 {
     int sock;
@@ -57,8 +58,10 @@ int PiConnection::connectToPi(const char *ip, int port)
     return sock;
 }
 
+// functie voor verlichting aangestuurd door encoder
 int PiConnection::encoderVerlichting(int socket[])
 {
+    // maak object aan
     WemosAansturen aanstuurder;
     int retry = 0;
     if (pi_a_socket <= 0)
@@ -116,27 +119,33 @@ int PiConnection::encoderVerlichting(int socket[])
 
     if (verlichtingsWaarde != oudVerlichtingswaarde)
     {
-        Versturen = true;
         verlichtingsWaarde = verlichtingsWaarde * 2;
+        if (verlichtingsWaarde > 253)
+        {
+            return 0;
+        }
         oudVerlichtingswaarde = verlichtingsWaarde;
         printf("Verlichtingswaarde: %d\n", verlichtingsWaarde);
+        Versturen = true;
     }
 
     if (Versturen)
     {
-        if(aanstuurder.stuurWemosAan(socket[1], 1, statusVerlichting, verlichtingsWaarde, Versturen) == -1){
+        if (aanstuurder.stuurWemosAan(socket[1], 1, statusVerlichting, verlichtingsWaarde, Versturen) == -1)
+        {
             return -2;
         }
         Versturen = false;
-
     }
 
     memset(buffer, 0, sizeof(buffer));
     return 0;
 }
 
+// functie voor routeverlichting
 int PiConnection::routeVerlichting(int socket[])
 {
+    // maak object aan
     WemosAansturen routeAanstuurder;
     int retry = 0;
     if (pi_a_socket <= 0)
@@ -146,10 +155,12 @@ int PiConnection::routeVerlichting(int socket[])
 
     const char *PiVerlichting = "routeVerlichting";
     memset(buffer, 0, sizeof(buffer));
-    send(pi_a_socket, PiVerlichting, strlen(PiVerlichting), 0);
-    int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
+    send(pi_a_socket, PiVerlichting, strlen(PiVerlichting), 0);  // verstuur bericht naar Pi A
+    int valread = read(pi_a_socket, buffer, sizeof(buffer) - 1); // lees antwoord van Pi A, returnvalue naar int valread.
     buffer[valread] = '\0';
     printf("Route verlichting ontvangen PiA:%s\n", buffer);
+
+    // indien bericht niet correct wordt ontvangen, probeer max 15x opnieuw
     while (retry <= 15 && valread <= 0)
     {
         usleep(25000); // 25 ms
@@ -158,30 +169,35 @@ int PiConnection::routeVerlichting(int socket[])
         printf("Ontvangen PiA: %s\n", buffer);
         retry++;
     }
+
+    // Controleer laatste keer of bericht niet is ontvangen
     if (valread <= 0 || strcmp(buffer, "niet correct ontvangen") == 0)
     {
         printf("Geen routeVerlichting bericht binnen\n");
         return -1;
     }
+
     int statusRouteVerlichting = atoi(buffer);
     printf("statusRouteVerlichting PiA:%d\n", statusRouteVerlichting);
-    if (statusRouteVerlichting == 1 || statusRouteVerlichting == 2)
+    if (statusRouteVerlichting == 1 || statusRouteVerlichting == 2) // afdeling 1 of 2
     {
         Versturen = true;
     }
-    if (Versturen){
-        if(routeAanstuurder.routeWemos(socket[1], 1,statusRouteVerlichting, Versturen ) == -1){
+    if (Versturen)
+    { // aansturen wemos 1 (verlichting)
+        if (routeAanstuurder.routeWemos(socket[1], 1, statusRouteVerlichting, Versturen) == -1)
+        {
+            return -2;
+        }
         Versturen = false;
-        return -2;
-        } // Aansturen van Wemos 1
-        
-    }   
+    }
     memset(buffer, 0, sizeof(buffer));
     return 0;
 }
-int PiConnection::ontvangTemperatuurData(char* outputBuffer, size_t bufSize)
+int PiConnection::ontvangTemperatuurData(char *outputBuffer, size_t bufSize)
 {
-    if (pi_a_socket <= 0) {
+    if (pi_a_socket <= 0)
+    {
         printf("Socket niet verbonden.\n");
         return -1;
     }
@@ -190,25 +206,29 @@ int PiConnection::ontvangTemperatuurData(char* outputBuffer, size_t bufSize)
     memset(buffer, 0, sizeof(buffer));
 
     // 30-second delay before sending
-    //printf("Wacht 30 seconden voor het versturen van het temperatuurverzoek...\n");
-   // sleep(30);
+    // printf("Wacht 30 seconden voor het versturen van het temperatuurverzoek...\n");
+    // sleep(30);
 
-    if (send(pi_a_socket, tempRequest, strlen(tempRequest), 0) < 0) {
+    if (send(pi_a_socket, tempRequest, strlen(tempRequest), 0) < 0)
+    {
         perror("Send mislukt");
         return -1;
     }
 
     int valread = 0;
     int retry = 0;
-    while (retry <= 15) {
+    while (retry <= 15)
+    {
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
-        if (valread > 0) break;
+        if (valread > 0)
+            break;
 
         usleep(25000); // 25 ms wachten
         retry++;
     }
 
-    if (valread <= 0) {
+    if (valread <= 0)
+    {
         perror("Fout bij lezen van server (na retries)");
         return -1;
     }
@@ -219,11 +239,10 @@ int PiConnection::ontvangTemperatuurData(char* outputBuffer, size_t bufSize)
     float tempBinnen = 0, tempBuiten = 0;
 
     // Adjusted parsing to only get temperature values
-    int parsed = sscanf(buffer,
-        "Binnen: %f °C, %*f %% RV | Buiten: %f °C, %*f %% RV",
-        &tempBinnen, &tempBuiten);
+    int parsed = sscanf(buffer,"Binnen: %f °C, %*f %% RV | Buiten: %f °C, %*f %% RV",&tempBinnen, &tempBuiten);
 
-    if (parsed != 2) {
+    if (parsed != 2)
+    {
         printf("Kan temperatuurvelden niet correct parsen uit buffer: %s\n", buffer);
         return -1;
     }
@@ -235,9 +254,10 @@ int PiConnection::ontvangTemperatuurData(char* outputBuffer, size_t bufSize)
     return 0;
 }
 
-int PiConnection::ontvangPersoonData(char* outputBuffer, size_t bufSize)
+int PiConnection::ontvangPersoonData(char *outputBuffer, size_t bufSize)
 {
-    if (pi_a_socket <= 0) {
+    if (pi_a_socket <= 0)
+    {
         printf("Socket niet verbonden.\n");
         return -1;
     }
@@ -245,22 +265,26 @@ int PiConnection::ontvangPersoonData(char* outputBuffer, size_t bufSize)
     const char *request = "persoon";
     memset(buffer, 0, sizeof(buffer));
 
-    if (send(pi_a_socket, request, strlen(request), 0) < 0) {
+    if (send(pi_a_socket, request, strlen(request), 0) < 0)
+    {
         perror("Send mislukt");
         return -1;
     }
 
     int valread = 0;
     int retry = 0;
-    while (retry <= 15) {
+    while (retry <= 15)
+    {
         valread = read(pi_a_socket, buffer, sizeof(buffer) - 1);
-        if (valread > 0) break;
+        if (valread > 0)
+            break;
 
         usleep(25000); // 25 ms wachten
         retry++;
     }
 
-    if (valread <= 0) {
+    if (valread <= 0)
+    {
         perror("Fout bij lezen van server (na retries)");
         return -1;
     }
@@ -272,8 +296,6 @@ int PiConnection::ontvangPersoonData(char* outputBuffer, size_t bufSize)
 
     personen = atoi(buffer);
 
-
     snprintf(outputBuffer, bufSize, "%d", personen);
     return 0;
 }
-

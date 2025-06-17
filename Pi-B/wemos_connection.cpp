@@ -8,7 +8,7 @@
 #include <sys/time.h>
 #include <sys/select.h>
 #include <netinet/tcp.h>
-
+// Socketconnectie tot stand brengen
 int WemosConnection::connectToWemos(const char* ip) {
     int sock;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
