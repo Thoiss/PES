@@ -121,15 +121,19 @@ int main(void)
 			if(reset_noodknop_status == 1){
 				HAL_UART_Transmit(&huart2, (uint8_t*) noodknop, strlen(noodknop), 1000);
 				reset_noodknop_status = !HAL_GPIO_ReadPin(Knop_GPIO_Port, Knop_Pin);
+				// Ledje wordt uitgezet bij indrukken reset noodknop
 				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
 				noodknoplamp = 0;
 			}
 			else{
 				HAL_UART_Transmit(&huart2, (uint8_t*) geen_noodknop, strlen(geen_noodknop), 1000);
 			}
+		//Het draaien aan de encoder wordt gelezen. de verlichting op de Wemos wordt feller of gedimd
 		rawCounter = counterLezen();
+		//Indrukken van de encoder wordt gelezen. Verlichting op de Wemos gaat aan/uit.
 		knopStatus = encoderKnopLezen();
 		if(servoKnop == 0){
+			//servoknop wordt gelezen
 			servoKnop = servoKnopLezen();
 		}
 		if (servoKnop == 1 && deurOpenLampAan == 0) {
@@ -143,11 +147,10 @@ int main(void)
 		    servoKnop = 0;
 		}
 		if (noodknoplamp == 1){
+			//Ledje wordt aangezet
 			HAL_GPIO_WritePin(noodknoplamp_GPIO_Port, noodknoplamp_Pin, GPIO_PIN_SET);
 			HAL_UART_Transmit(&huart2, (uint8_t*) "lamp moet aan zijn", strlen("lamp moet aan zijn"), 1000);
 		}
-//		snprintf(tekstbuffer, sizeof(tekstbuffer), "Knop: %d, Positie: %ld ServoKnop: %d\r\n", knopStatus, rawCounter, servoKnop);
-//		HAL_UART_Transmit(&huart2, (uint8_t*) tekstbuffer, strlen(tekstbuffer), 1000);
 		  }
     /* USER CODE END WHILE */
 
@@ -395,11 +398,11 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
     if (hi2c->Instance == I2C1)  // check of het de juiste I2C is
     {
-    		char bufferraw[20];
   	  snprintf(tekstbuffer, sizeof(tekstbuffer), "Knop: %d, Positie: %ld ServoKnop: %d\r\n", knopStatus, rawCounter, servoKnop);
   	  HAL_UART_Transmit(&huart2, (uint8_t*) tekstbuffer, strlen(tekstbuffer), 1000);
 
 if(RX_Buffer [0]== 1){
+	// De 32 bit waarde wordt verdeeld over 4 bytes. Dus 1 byte = 0-255
   	uint8_t data[4] = {
   	            (uint8_t)( rawCounter        & 0xFF),        // laagste byte
   	            (uint8_t)((rawCounter >> 8)  & 0xFF),
@@ -420,54 +423,36 @@ if(RX_Buffer [0]== 1){
 
 else if(RX_Buffer [0]== 2){
 
-  	        uint8_t commando = RX_Buffer[0];
 
-  	        // Check welk byte de master wil (1..4)
-  	        if (commando >= 1 && commando <= 4)
-  	        {
-  	            // stuur de gevraagde byte terug
-  	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &knopStatus, 1);
+  	            // stuur de knopstatus van de encoder naar de Pi
+  	        HAL_I2C_Slave_Transmit_IT(&hi2c1, &knopStatus, 1);
   	        HAL_UART_Transmit(&huart2, (uint8_t*) Verstuurd, strlen(Verstuurd), 1000);
 
-  	        }
+  	        
   	      knopStatus =0;
 
 }
 else if(RX_Buffer [0]== 3){
 
-  	        uint8_t commando = RX_Buffer[0];
 
-  	        // Check welk byte de master wil (1..4)
-  	        if (commando >= 1 && commando <= 4)
-  	        {
-  	            // stuur de gevraagde byte terug
+  	            // stuur de servoknop status naar de Pi
   	            HAL_I2C_Slave_Transmit_IT(&hi2c1, &servoKnop, 1);
-
-  	        }
 
 }
 else if(RX_Buffer [0]== 4){
+	//Reset waarde servoknop
 	servoKnop = 0;
-	//knopStatus =0;
 	HAL_UART_Transmit(&huart2, (uint8_t*) Test, strlen(Test), 1000);
 }
 
 else if(RX_Buffer [0]== 5){
 
-//  	        uint8_t commando = RX_Buffer[0];
-//
-//  	        // Check welk byte de master wil (1..4)
-//  	        if (commando >= 1 && commando <= 4)
-//  	        {
-//  	            // stuur de gevraagde byte terug
+  	          // stuur de reset_noodknop_status
   	          HAL_I2C_Slave_Transmit_IT(&hi2c1, &reset_noodknop_status, 1);
-////  	        HAL_UART_Transmit(&huart2, (uint8_t*) Verstuurd, strlen(Verstuurd), 1000);
-//
-//  	        }
-//  	      reset_noodknop_status =0;
 
 }
 else if(RX_Buffer [0]== 6){
+	// zet noodknoplamp op 1. In de while wordt het ledje aangezet
 	noodknoplamp = 1;
 }
     HAL_I2C_Slave_Receive_IT(&hi2c1, RX_Buffer, 1);
