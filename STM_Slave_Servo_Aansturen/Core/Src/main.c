@@ -198,7 +198,7 @@ int main(void)
 		else if (status == 4&& noodknop ==1){
 			noodknop = 0;
 			status = 10;
-			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);//licht gaat uit
 		}
 
     /* USER CODE END WHILE */
