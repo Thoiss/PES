@@ -2,7 +2,7 @@
 #include "main.h"
 int counterLezen() {
     int waarde = __HAL_TIM_GET_COUNTER(&htim2);
-
+// De if statements zijn toegevoegd zodat de counter niet van 128->0 en van 0->128 gaat in 1 stap
     if (waarde > 127) {
         waarde = 127;
         __HAL_TIM_SET_COUNTER(&htim2, 127);
@@ -12,7 +12,6 @@ int counterLezen() {
         __HAL_TIM_SET_COUNTER(&htim2, 6);
     }
 
-    rawCounter = waarde;
     return waarde;
 }
 int encoderKnopLezen(){
